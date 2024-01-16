@@ -366,7 +366,7 @@
     components: { VDistpicker, LogisticsDialog},
     data() {
       return {
-        id: null,
+        id: '',
         order: {},
         receiverDialogVisible:false,
         receiverInfo:Object.assign({},defaultReceiverInfo),
@@ -383,8 +383,9 @@
     },
     created() {
       this.id = this.list = this.$route.query.id;
-      getOrderDetail(this.id).then(response => {
-        this.order = response.data;
+      getOrderDetail(this.Base64.encode(this.id+'')).then(response => {
+        this.order = JSON.parse(this.Base64.decode(response.data));
+
       });
     },
     filters: {

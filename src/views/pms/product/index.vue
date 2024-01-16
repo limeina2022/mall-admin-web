@@ -568,6 +568,7 @@
       handleResetSearch() {
         this.selectProductCateValue = [];
         this.listQuery = Object.assign({}, defaultListQuery);
+        this.getList();
       },
       handleDelete(index, row){
         this.$confirm('是否要进行删除操作?', '提示', {

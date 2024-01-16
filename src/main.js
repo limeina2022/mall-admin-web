@@ -15,6 +15,9 @@ import store from './store'
 
 import '@/icons' // icon
 import '@/permission' // permission control
+import {Base64} from 'js-base64'
+
+Vue.prototype.Base64 = Base64;
 
 Vue.use(ElementUI, { locale })
 Vue.use(VCharts)
