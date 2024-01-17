@@ -375,7 +375,7 @@
         messageDialogVisible:false,
         message: {title:null, content:null},
         closeDialogVisible:false,
-        closeInfo:{note:null,id:null},
+        closeInfo:{note:'',id:''},
         markOrderDialogVisible:false,
         markInfo:{note:null},
         logisticsDialogVisible:false
@@ -383,10 +383,8 @@
     },
     created() {
       this.id = this.list = this.$route.query.id;
-      getOrderDetail(this.Base64.encode(this.id+'')).then(response => {
-        this.order = JSON.parse(this.Base64.decode(response.data));
-
-      });
+      this.getOrdreListDetail(this.id)
+      
     },
     filters: {
       formatNull(value) {
@@ -485,6 +483,11 @@
       }
     },
     methods: {
+      getOrdreListDetail(id){
+        getOrderDetail(this.Base64.encode(id+'')).then(response => {
+          this.order = JSON.parse(this.Base64.decode(response.data));
+       })
+      },
       onSelectRegion(data){
         this.receiverInfo.receiverProvince=data.province.value;
         this.receiverInfo.receiverCity=data.city.value;
@@ -538,9 +541,10 @@
               type: 'success',
               message: '修改成功!'
             });
-            getOrderDetail(this.id).then(response => {
-              this.order = response.data;
-            });
+            // getOrderDetail(this.id).then(response => {
+            //   this.order = response.data;
+            // });
+            this.getOrdreListDetail(this.id)
           });
         });
       },
@@ -563,9 +567,10 @@
               type: 'success',
               message: '修改成功!'
             });
-            getOrderDetail(this.id).then(response => {
-              this.order = response.data;
-            });
+            // getOrderDetail(this.id).then(response => {
+            //   this.order = response.data;
+            // });
+             this.getOrdreListDetail(this.id)
           });
         });
       },
@@ -598,25 +603,30 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-            let params = new URLSearchParams();
-            params.append("ids",[this.closeInfo.id]);
-            params.append("note",this.closeInfo.note);
+            // let params = new URLSearchParams();
+            // params.append("ids",[this.closeInfo.id]);
+            // params.append("note",this.closeInfo.note);
+             let params = {
+               ids: this.Base64.encode(this.closeInfo.id +''),
+               note: this.Base64.encode(this.closeInfo.note)
+             }
             closeOrder(params).then(response=>{
               this.closeDialogVisible=false;
               this.$message({
                 type: 'success',
                 message: '订单关闭成功!'
               });
-              getOrderDetail(this.id).then(response => {
-                this.order = response.data;
-              });
+              // getOrderDetail(this.id).then(response => {
+              //   this.order = response.data;
+              // });
+               this.getOrdreListDetail(this.id)
             });
         });
       },
       showMarkOrderDialog(){
         this.markOrderDialogVisible=true;
         this.markInfo.id=this.id;
-        this.closeOrder.note=null;
+        this.closeOrder.note='';
       },
       handleMarkOrder(){
         this.$confirm('是否要备注订单?', '提示', {
@@ -634,9 +644,10 @@
               type: 'success',
               message: '订单备注成功!'
             });
-            getOrderDetail(this.id).then(response => {
-              this.order = response.data;
-            });
+            // getOrderDetail(this.id).then(response => {
+            //   this.order = response.data;
+            // });
+             this.getOrdreListDetail(this.id)
           });
         });
       },
@@ -646,8 +657,12 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          let params = new URLSearchParams();
-          params.append("ids",[this.id]);
+          // let params = new URLSearchParams();
+          // params.append("ids",[this.id]);
+          const ids = this.id.toString()
+          const params = {
+            ids: this.Base64.encode(ids)
+          }
           deleteOrder(params).then(response=>{
             this.$message({
               message: '删除成功！',

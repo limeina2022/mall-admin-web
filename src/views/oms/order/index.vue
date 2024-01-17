@@ -468,10 +468,14 @@ export default {
         });
         return;
       }
-      let params = new URLSearchParams();
-      params.append("ids", this.closeOrder.orderIds);
-      params.append("note", this.closeOrder.content);
-     
+      // let params = new URLSearchParams();
+      // params.append("ids", this.closeOrder.orderIds);
+      // params.append("note", this.closeOrder.content);
+     const idsData = this.closeOrder.orderIds.toString()
+     let params = {
+        ids: this.Base64.encode(idsData),
+        note:  this.Base64.encode(this.closeOrder.content)
+     }
       closeOrder(params).then((response) => {
         this.closeOrder.orderIds = [];
         this.closeOrder.dialogVisible = false;
@@ -517,8 +521,12 @@ export default {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
-        let params = new URLSearchParams();
-        params.append("ids", ids);
+        // let params = new URLSearchParams();
+        // params.append("ids", ids);
+         const idsData = ids.toString()
+          const params = {
+            ids: this.Base64.encode(idsData)
+          }
         deleteOrder(params).then((response) => {
           this.$message({
             message: "删除成功！",
