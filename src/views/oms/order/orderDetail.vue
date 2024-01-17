@@ -351,15 +351,15 @@
   import {formatDate} from '@/utils/date';
   import VDistpicker from 'v-distpicker';
   const defaultReceiverInfo = {
-    orderId:null,
-    receiverName:null,
-    receiverPhone:null,
-    receiverPostCode:null,
-    receiverDetailAddress:null,
-    receiverProvince:null,
-    receiverCity:null,
-    receiverRegion:null,
-    status:null
+    orderId: '',
+    receiverName:'',
+    receiverPhone:'',
+    receiverPostCode: '',
+    receiverDetailAddress: '',
+    receiverProvince: '',
+    receiverCity: '',
+    receiverRegion: '',
+    status: ''
   };
   export default {
     name: 'orderDetail',
@@ -377,7 +377,7 @@
         closeDialogVisible:false,
         closeInfo:{note:'',id:''},
         markOrderDialogVisible:false,
-        markInfo:{note:null},
+        markInfo:{note:''},
         logisticsDialogVisible:false
       }
     },
@@ -535,7 +535,8 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          updateReceiverInfo(this.receiverInfo).then(response=>{
+          const receiverInfoData = JSON.stringify(this.receiverInfo)
+          updateReceiverInfo(this.Base64.encode(receiverInfoData)).then(response=>{
             this.receiverDialogVisible=false;
             this.$message({
               type: 'success',
@@ -561,7 +562,8 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          updateMoneyInfo(this.moneyInfo).then(response=>{
+          const moneyInfoData = JSON.stringify(this.moneyInfo)
+          updateMoneyInfo(this.Base64.encode(moneyInfoData)).then(response=>{
             this.moneyDialogVisible=false;
             this.$message({
               type: 'success',
@@ -634,10 +636,13 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          let params = new URLSearchParams();
-          params.append("id",this.markInfo.id);
-          params.append("note",this.markInfo.note);
-          params.append("status",this.order.status);
+        const idData = this.markInfo.id.toString()
+        const statusData = this.order.status.toString()
+         let params ={
+          id: this.Base64.encode(idData),
+          note: this.Base64.encode(this.markInfo.note ),
+          status: this.Base64.encode(statusData)
+         }
           updateOrderNote(params).then(response=>{
             this.markOrderDialogVisible=false;
             this.$message({

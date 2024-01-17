@@ -77,7 +77,8 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          deliveryOrder(this.list).then(response=>{
+          const deliveryData = JSON.stringify(this.list)
+          deliveryOrder(this.Base64.encode(deliveryData)).then(response=>{
             this.$router.back();
             this.$message({
               type: 'success',
