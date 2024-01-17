@@ -134,12 +134,12 @@
   const defaultListQuery = {
     pageNum: 1,
     pageSize: 10,
-    id: null,
-    receiverKeyword: null,
-    status: null,
-    createTime: null,
-    handleMan: null,
-    handleTime: null
+    id: '',
+    receiverKeyword: '',
+    status: '',
+    createTime: '',
+    handleMan: '',
+    handleTime: ''
   };
   const defaultStatusOptions=[
     {
@@ -206,6 +206,7 @@
       },
       handleResetSearch() {
         this.listQuery = Object.assign({}, defaultListQuery);
+        this.getList();
       },
       handleSearchList() {
         this.listQuery.pageNum = 1;
@@ -230,12 +231,16 @@
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
-            let params = new URLSearchParams();
+            // let params = new URLSearchParams();
             let ids=[];
             for(let i=0;i<this.multipleSelection.length;i++){
               ids.push(this.multipleSelection[i].id);
             }
-            params.append("ids",ids);
+            // params.append("ids",ids);
+            const idsData = ids.toString()
+            const params = {
+              ids: this.Base64.encode(idsData)
+            }
             deleteApply(params).then(response=>{
               this.getList();
               this.$message({
@@ -257,10 +262,21 @@
       },
       getList(){
         this.listLoading=true;
-        fetchList(this.listQuery).then(response => {
+        const params = {
+          pageNum: this.Base64.encode(this.listQuery.pageNum + ""),
+          pageSize: this.Base64.encode(this.listQuery.pageSize + ""),
+          id: this.Base64.encode(this.listQuery.id+ ''),
+          receiverKeyword: this.Base64.encode(this.listQuery.receiverKeyword),
+          status: this.Base64.encode(this.listQuery.status + ""),
+          createTime: this.Base64.encode(this.listQuery.createTime),
+          handleMan: this.Base64.encode(this.listQuery.handleMan),
+          handleTime: this.Base64.encode(this.listQuery.handleTime)
+      };
+        fetchList(params).then(response => {
           this.listLoading = false;
-          this.list = response.data.list;
-          this.total = response.data.total;
+          let data = JSON.parse(this.Base64.decode(response.data));
+          this.list = data.list;
+          this.total = data.total;
         });
       }
     }
