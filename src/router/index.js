@@ -195,7 +195,14 @@ export const asyncRouterMap = [
         component: () => import('@/views/oms/apply/applyDetail'),
         meta: {title: '退货原因详情'},
         hidden:true
-      }
+      },
+      {
+        path: 'createApplication',
+        name: 'createApplication',
+        component: () => import('@/views/oms/order/createApplication'),
+        meta: {title: '新建申请'},
+        hidden:true
+      },
     ]
   },
   // {
