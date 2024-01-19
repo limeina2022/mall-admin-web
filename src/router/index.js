@@ -161,7 +161,7 @@ export const asyncRouterMap = [
         path: 'orderDetail',
         name: 'orderDetail',
         component: () => import('@/views/oms/order/orderDetail'),
-        meta: {title: '订单详情'},
+        meta: {title: '申请详情'},
         hidden:true
       },
       {
@@ -200,8 +200,16 @@ export const asyncRouterMap = [
         path: 'createApplication',
         name: 'createApplication',
         component: () => import('@/views/oms/order/createApplication'),
-        meta: {title: '新建申请'},
-        hidden:true
+        hidden:true,
+        beforeEnter: (to, from, next) => {
+          if( to.query.id ) {
+            to.meta.title= '编辑申请'
+          } else {
+            to.meta.title= '新建申请'
+          }
+          document.title = to.meta.title || '默认标题';
+          next()
+        }
       },
     ]
   },
