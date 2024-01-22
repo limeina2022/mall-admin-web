@@ -6,19 +6,25 @@
           <div>产品{{ index + 1 }}</div>
           <i class="el-icon-close" @click="removeProdctForm(index)"></i>
         </div>
-        <el-form :model="productForm" size="small" label-width="220px">
+        <el-form
+          :model="productForm"
+          ref="productFormRef"
+          :rules="getRules(index)"
+          size="small"
+          label-width="220px"
+        >
           <el-form-item label="产品分类：">
             <el-select
               v-model="productForm.type"
               class="input-width"
-              placeholder="全部"  
+              placeholder="全部"
               clearable
             >
               <el-option
                 v-for="item in prodctTypeList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
               >
               </el-option>
             </el-select>
@@ -29,37 +35,60 @@
               class="input-width"
               placeholder="全部"
               clearable
+              @change="getProductAttributes(productForm)"
             >
               <el-option
                 v-for="item in prodctNameList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
               >
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品数量：">
+          <el-form-item label="产品数量：" prop="num">
             <el-input
               v-model.number="productForm.num"
+              type="number"
+              min="0"
               style="width: 190px"
               placeholder="请选择产品数量"
             ></el-input>
           </el-form-item>
-          <el-form-item label="产品属性1：">
+
+          <!-- <el-form-item
+            v-for="attribute in productForm.attributes"
+            :key="attribute.key"
+            :label="attribute.label"
+          >
+            <el-select v-model="attribute.valueData"  clearable placeholder="请选择属性值">
+              <el-option
+                v-for="option in attribute.options"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              ></el-option>
+            </el-select>
+          </el-form-item> -->
+          <el-form-item
+            ref="attributeSelects"
+            v-for="(attribute, index) in productForm.attributes"
+            :key="attribute.key"
+            :label="attribute.label"
+          >
             <el-select
-              v-model="productForm.attribute"
-              class="input-width"
-              placeholder="全部"
+              v-if="showAttribute"
+              v-model="productForm.attributes[index].valueData"
               clearable
+              placeholder="请选择属性值"
+              @change="updateDom"
             >
               <el-option
-                v-for="item in prodctAttributeList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              >
-              </el-option>
+                v-for="option in attribute.options"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              ></el-option>
             </el-select>
           </el-form-item>
         </el-form>
@@ -80,89 +109,183 @@
   </div>
 </template>
 <script>
-// import { productList } from "@/api/order";
+import { productListCategory, productAttributes } from "@/api/order";
+// import { fetchList } from "@/api/productCate";
+
 const defaultListQuery = {
   type: "",
   name: "",
   num: "",
-  attribute: "",
+  attributes: "",
 };
 export default {
   data() {
     return {
-      productForm: Object.assign({}, defaultListQuery),
-      productForms: [],
-      prodctTypeList: [
+      showAttribute: false,
+      // productForm: Object.assign({}, defaultListQuery),
+      productForms: [
         {
-          label: "产品A",
-          value: 0,
-        },
-        {
-          label: "产品B",
-          value: 1,
-        },
-        {
-          label: "产品C",
-          value: 2,
+          type: "",
+          name: "",
+          num: "",
+          attributes: [
+            {
+              valueData: "",
+            },
+          ],
         },
       ],
-      prodctNameList: [
-        {
-          label: "AA",
-          value: 0,
-        },
-        {
-          label: "BB",
-          value: 1,
-        },
-        {
-          label: "CC",
-          value: 2,
-        },
-      ],
-      prodctAttributeList: [],
+      prodctTypeList: [],
+      prodctNameList: [],
+      parentId: 0,
+      // rules:[]
+      rules(index) {
+        return {
+          num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
+        };
+      },
     };
   },
   created() {
-    this.getProductList();
-    if(this.$route.query.id){
-      this.productForms =[
+    this.getProductListCategory();
+    if (this.$route.query.id) {
+      this.showAttribute = true;
+      this.productForms = [
         {
           type: 1,
-           name: "ww",
-           num: 10,
-          attribute: "2",
-        },{
+          name: "ww",
+          num: 10,
+          attributes: [
+            {
+              key: "颜色",
+              label: "颜色",
+              valueData: "黑色",
+              options: [
+                {
+                  label: "黑色",
+                  value: "黑色",
+                },
+                {
+                  label: "蓝色",
+                  value: "蓝色",
+                },
+              ],
+            },
+          ],
+        },
+        {
           type: "3",
-           name: "qq",
-           num: 10,
-          attribute: "2",
-        }
-      ]
+          name: "qq",
+          num: 10,
+          attributes: "2",
+        },
+      ];
     }
   },
-  watch: {
-    productForms: {
-      handler: function (newVal) {
-        this.getProductList(newVal);
-      },
-      deep: true,
-    },
-  },
   methods: {
-    addProdctForm() {
-      this.productForms.push({ type: "", name: "", num: "", attribute: "" });
+    getRules(index) {
+      return {
+        num: [{ required: true, message: "请输入数量", trigger: "blur" }],
+        // 其他字段校验规则
+      };
     },
+    addProdctForm() {
+      this.productForms.push({ type: "", name: "", num: "", attributes: "" });
+      // this.rules.push({
+      //   type: [{ required: true, message: "请输入申请分类", trigger: "blur" }],
+      //   name: [{ required: true, message: "请输入产品名称", trigger: "blur" }],
+      //   num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
+      // });
+    },
+
     removeProdctForm(index) {
       this.productForms.splice(index, 1);
     },
-    getProductList() {
-      // 请求接口
-      //   productList(params).then((response) => {});
-      // 产品分类获取到有效值后，再展示产品名称
+    //  点击产品名称，获取属性值
+    async getProductAttributes(productForm) {
+      // const nameValue = this.productForms[index].name;
+      const nameValue = productForm.name;
+      productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
+        const data = this.Base64.decode(response.data);
+        const input = JSON.parse(data);
+        productForm.attributes = this.convertToSelectOptioData(input);
+        if (productForm.attributes.length > 0) {
+          this.showAttribute = true;
+        }
+        this.$forceUpdate();
+      });
     },
-    saveDraft() {},
+    updateDom() {
+      // this.$forceUpdate();
+    },
+
+    getProductListCategory() {
+      productListCategory().then((response) => {
+        const productListData = this.Base64.decode(response.data);
+        this.prodctTypeList = JSON.parse(productListData).map((obj) => {
+          return {
+            name: obj.productCategoryName,
+            // id: Math.floor(Math.random() * 100),
+            id: obj.productId,
+          };
+        });
+        this.prodctNameList = JSON.parse(productListData).map((obj) => {
+          return {
+            name: obj.productName,
+            id: obj.productId,
+          };
+        });
+      });
+    },
+    saveDraft() {
+      console.log("this.productForms的值", this.productForms);
+      let isValid = true;
+      for (let i = 0; i < this.productForms.length; i++) {
+        this.$refs.productFormRef[i].validate((valid) => {
+          if (!valid) {
+            isValid = false;
+          }
+        });
+      }
+      if (isValid) {
+        console.log("校验通过");
+      } else {
+        console.log("校验不通过");
+      }
+    },
     submit() {},
+
+    convertToSelectOptioData(input) {
+      // 接受的数据格式
+      // const input = {
+      //   "颜色": "红色,蓝色",
+      //   "尺寸": "38,39",
+      //   "风格": "秋季,夏季",
+      // };
+
+      const output = [];
+
+      // 循环处理每一项
+      for (const key in input) {
+        const item = {
+          key: key.toLowerCase(),
+          label: key,
+          options: [],
+        };
+
+        // 处理选项
+        const options = input[key].split(",");
+        for (let i = 0; i < options.length; i++) {
+          item.options.push({
+            value: options[i].toLowerCase(),
+            label: options[i],
+          });
+        }
+
+        output.push(item);
+      }
+      return output;
+    },
   },
 };
 </script>

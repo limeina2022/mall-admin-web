@@ -61,3 +61,18 @@ export function updateOrderNote(params) {
     params:params
   })
 }
+
+export function productListCategory() {
+  return request({
+    url:'inventory/listCategory',
+    method:'get'
+  });
+}
+
+
+export function productAttributes(id) {
+  return request({
+    url:'inventory/getAttributesByProductId/'+id,
+    method:'get'
+  });
+}
