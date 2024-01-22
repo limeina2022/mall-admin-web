@@ -32,18 +32,18 @@ export const constantRouterMap = [
       component: () => import('@/views/home/index'),
       meta: {title: '仪表盘', icon: 'dashboard'}
     },
-    {
-      name: 'document',
-      path: 'https://www.macrozheng.com',
-      meta: {title: '学习教程', icon: 'document'},
-      hidden: true  
-    },
-    {
-      name: 'video',
-      path: 'https://www.macrozheng.com/mall/catalog/mall_video.html',
-      meta: {title: '视频教程', icon: 'video'},
-      hidden: true  
-    },
+    // {
+    //   name: 'document',
+    //   path: 'https://www.macrozheng.com',
+    //   meta: {title: '学习教程', icon: 'document'},
+    //   hidden: true  
+    // },
+    // {
+    //   name: 'video',
+    //   path: 'https://www.macrozheng.com/mall/catalog/mall_video.html',
+    //   meta: {title: '视频教程', icon: 'video'},
+    //   hidden: true  
+    // },
     ]
   }
 ]
@@ -155,7 +155,7 @@ export const asyncRouterMap = [
         path: 'order',
         name: 'order',
         component: () => import('@/views/oms/order/index'),
-        meta: {title: '出入库申请', icon: 'product-list'}
+        meta: {title: '入库申请', icon: 'product-list'}
       },
       {
         path: 'orderDetail',
@@ -164,38 +164,13 @@ export const asyncRouterMap = [
         meta: {title: '申请详情'},
         hidden:true
       },
-      {
-        path: 'deliverOrderList',
-        name: 'deliverOrderList',
-        component: () => import('@/views/oms/order/deliverOrderList'),
-        meta: {title: '发货列表'},
-        hidden:true
-      },
       // {
-      //   path: 'orderSetting',
-      //   name: 'orderSetting',
-      //   component: () => import('@/views/oms/order/setting'),
-      //   meta: {title: '订单设置', icon: 'order-setting'},
+      //   path: 'deliverOrderList',
+      //   name: 'deliverOrderList',
+      //   component: () => import('@/views/oms/order/deliverOrderList'),
+      //   meta: {title: '发货列表'},
+      //   hidden:true
       // },
-      {
-        path: 'returnApply',
-        name: 'returnApply',
-        component: () => import('@/views/oms/apply/index'),
-        meta: {title: '退货申请处理', icon: 'order-return'}
-      },
-      {
-        path: 'returnReason',
-        name: 'returnReason',
-        component: () => import('@/views/oms/apply/reason'),
-        meta: {title: '退货原因设置', icon: 'order-return-reason'}
-      },
-      {
-        path: 'returnApplyDetail',
-        name: 'returnApplyDetail',
-        component: () => import('@/views/oms/apply/applyDetail'),
-        meta: {title: '退货原因详情'},
-        hidden:true
-      },
       {
         path: 'createApplication',
         name: 'createApplication',
@@ -211,6 +186,92 @@ export const asyncRouterMap = [
           next()
         }
       },
+      // {
+      //   path: 'orderSetting',
+      //   name: 'orderSetting',
+      //   component: () => import('@/views/oms/order/setting'),
+      //   meta: {title: '订单设置', icon: 'order-setting'},
+      // },
+
+      // 出库申请
+      //  {
+      //   path: 'returnApply',
+      //   name: 'returnApply',
+      //   component: () => import('@/views/oms/apply/index'),
+      //   meta: {title: '退货申请处理', icon: 'order-return'}
+      // },
+      {
+        path: 'exWarehouse',
+        name: 'returnApply',
+        component: () => import('@/views/oms/ex-warehouse/index'),
+        meta: {title: '出库申请', icon: 'order-return'}
+      },
+      {
+        path: 'createExWarehouseApplication',
+        name: 'createExWarehouseApplication',
+        component: () => import('@/views/oms/ex-warehouse/createExWarehouseApplication'),
+        hidden:true,
+        beforeEnter: (to, from, next) => {
+          if( to.query.id ) {
+            to.meta.title= '编辑出库申请'
+          } else {
+            to.meta.title= '新建入库申请'
+          }
+          document.title = to.meta.title || '默认标题';
+          next()
+        }
+      },
+      {
+        path: 'exWarehouseDetail',
+        name: 'orderDetail',
+        component: () => import('@/views/oms/ex-warehouse/applicationDetail'),
+        meta: {title: '申请详情'},
+        hidden:true
+      },
+
+      // 退库申请
+      {
+        path: 'returnApplication',
+        name: 'returnReason',
+        component: () => import('@/views/oms/return/index.vue'),
+        meta: {title: '退库申请', icon: 'order-return-reason'}
+      },
+      {
+        path: 'createReturnApplication',
+        name: 'createReturnApplication',
+        component: () => import('@/views/oms/return/createReturnApplication'),
+        hidden:true,
+        beforeEnter: (to, from, next) => {
+          if( to.query.id ) {
+            to.meta.title= '编辑退库申请'
+          } else {
+            to.meta.title= '新建退库申请'
+          }
+          document.title = to.meta.title || '默认标题';
+          next()
+        }
+      },
+      {
+        path: 'returnDetail',
+        name: 'returnApplyDetail',
+        component: () => import('@/views/oms/return/returnDetail'),
+        meta: {title: '申请详情'},
+        hidden:true
+      },
+      // {
+      //   path: 'returnReason',
+      //   name: 'returnReason',
+      //   component: () => import('@/views/oms/apply/reason'),
+      //   meta: {title: '退货原因设置', icon: 'order-return-reason'}
+      // },
+      // {
+      //   path: 'returnApplyDetail',
+      //   name: 'returnApplyDetail',
+      //   component: () => import('@/views/oms/apply/applyDetail'),
+      //   meta: {title: '退货原因详情'},
+      //   hidden:true
+      // },
+      
     ]
   },
   // {
