@@ -76,3 +76,18 @@ export function productAttributes(id) {
     method:'get'
   });
 }
+// 保存草稿
+export function productInsert() {
+  return request({
+    url:'/inventory/insert',
+    method:'post'
+  });
+}
+// 列表
+export function inventoryList(params) {
+  return request({
+    url:'/inventory/list',
+    method:'get',
+    params:params
+  })
+}

@@ -29,32 +29,36 @@
         >
           <el-form-item label="申请编号：">
             <el-input
-              v-model="listQuery.orderSn"
+              v-model="listQuery.code"
               class="input-width"
               placeholder="申请编号"
             ></el-input>
           </el-form-item>
           <el-form-item label="申请人：">
             <el-input
-              v-model="listQuery.receiverKeyword"
+              v-model="listQuery.applicantName"
               class="input-width"
               placeholder="申请人姓名"
             ></el-input>
           </el-form-item>
           <el-form-item label="申请时间：">
             <el-date-picker
+              width="200px"
               class="input-width"
-              v-model="listQuery.createTime"
-              value-format="yyyy-MM-dd"
-              type="date"
-              placeholder="请选择时间"
+              v-model="createTime"
+              value-format="yyyy-MM-dd HH:mm:ss"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="handleDateRangeChange"
             >
             </el-date-picker>
           </el-form-item>
 
           <el-form-item label="申请状态：">
             <el-select
-              v-model="listQuery.applyStatus"
+              v-model="listQuery.status"
               class="input-width"
               placeholder="全部"
               clearable
@@ -101,8 +105,8 @@
         <el-table-column label="编号" width="80" align="center">
           <template slot-scope="scope">{{ scope.row.id }}</template>
         </el-table-column>
-        <el-table-column label="申请编号" width="180" align="center">
-          <template slot-scope="scope">{{ scope.row.orderSn }}</template>
+        <el-table-column label="申请编号" width="200" align="center">
+          <template slot-scope="scope">{{ scope.row.code }}</template>
         </el-table-column>
         <el-table-column label="申请时间" width="180" align="center">
           <template slot-scope="scope">{{
@@ -110,7 +114,7 @@
           }}</template>
         </el-table-column>
         <el-table-column label="申请用户" align="center">
-          <template slot-scope="scope">{{ scope.row.memberUsername }}</template>
+          <template slot-scope="scope">{{ scope.row.applicantName }}</template>
         </el-table-column>
         <el-table-column label="金额" width="120" align="center">
           <template slot-scope="scope">￥{{ scope.row.totalAmount }}</template>
@@ -118,7 +122,10 @@
 
         <!-- 新增申请状态：草稿，待审批，通过，驳回 -->
         <el-table-column label="申请状态" width="120" align="center">
-          <template slot-scope="scope">{{ scope.row.applyStatus }}</template>
+          <!-- <template slot-scope="scope">{{ scope.row.status }}</template> -->
+          <template slot-scope="scope">{{
+            getStatus(scope.row.status)
+          }}</template>
         </el-table-column>
         <el-table-column label="操作" width="200" align="center">
           <template slot-scope="scope">
@@ -129,7 +136,7 @@
             >
             <!--  审批按钮：管理员且待审批状态才会展示 -->
             <el-button
-              v-if="role == '超级管理员' &&  scope.row.applyStatus === 1"
+              v-if="role == '超级管理员' && scope.row.applyStatus === 1"
               size="mini"
               @click="approvalApplication(scope.$index, scope.row)"
               >审批申请</el-button
@@ -157,42 +164,21 @@
       >
       </el-pagination>
     </div>
-    <!-- <el-dialog
-      title="关闭订单"
-      :visible.sync="closeOrder.dialogVisible"
-      width="30%"
-    >
-      <span style="vertical-align: top">操作备注：</span>
-      <el-input
-        style="width: 80%"
-        type="textarea"
-        :rows="5"
-        placeholder="请输入内容"
-        v-model="closeOrder.content"
-      >
-      </el-input>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="closeOrder.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handleCloseOrderConfirm"
-          >确 定</el-button
-        >
-      </span>
-    </el-dialog> -->
-    <!-- <logistics-dialog v-model="logisticsDialogVisible"></logistics-dialog> -->
   </div>
 </template>
 <script>
-import { fetchList, closeOrder, deleteOrder } from "@/api/order";
+import { fetchList, inventoryList, closeOrder, deleteOrder } from "@/api/order";
 import { formatDate } from "@/utils/date";
 // import LogisticsDialog from "@/views/oms/order/components/logisticsDialog";
 import store from "@/store";
 const defaultListQuery = {
   pageNum: 1,
   pageSize: 10,
-  orderSn: "", // 申请编号
-  receiverKeyword: "",
-  applyStatus: "", // 申请状态
-  createTime: "",
+  code: "", // 申请编号
+  applicantName: "", //申请人
+  status: "", // 申请状态
+  startTime: "",
+  endTime: "",
 };
 export default {
   name: "orderList",
@@ -205,6 +191,7 @@ export default {
       total: null,
       operateType: null,
       role: "",
+      createTime: "",
       applyStatusOptions: [
         {
           label: "草稿",
@@ -237,6 +224,18 @@ export default {
     },
   },
   methods: {
+    getStatus(status) {
+      switch (status) {
+        case 0:
+          return "草稿";
+        case 1:
+          return "待审批";
+        case 2:
+          return "通过";
+        case 3:
+          return "驳回";
+      }
+    },
     handleResetSearch() {
       this.listQuery = Object.assign({}, defaultListQuery);
       this.getList();
@@ -252,10 +251,16 @@ export default {
       this.$router.push({ path: "/oms/orderDetail", query: { id: row.id } });
     },
     editApplication(index, row) {
-      this.$router.push({ path: "/oms/createApplication", query: { id: row.id } });
+      this.$router.push({
+        path: "/oms/createApplication",
+        query: { id: row.id },
+      });
     },
-    approvalApplication(index, row){
-      this.$router.push({ path: "/oms/createApplication", query: { id: row.id } });
+    approvalApplication(index, row) {
+      this.$router.push({
+        path: "/oms/createApplication",
+        query: { id: row.id },
+      });
     },
     handleSizeChange(val) {
       this.listQuery.pageNum = 1;
@@ -266,55 +271,33 @@ export default {
       this.listQuery.pageNum = val;
       this.getList();
     },
-    // handleCloseOrderConfirm() {
-    //   if (this.closeOrder.content == null || this.closeOrder.content === "") {
-    //     this.$message({
-    //       message: "操作备注不能为空",
-    //       type: "warning",
-    //       duration: 1000,
-    //     });
-    //     return;
-    //   }
-    //   // let params = new URLSearchParams();
-    //   // params.append("ids", this.closeOrder.orderIds);
-    //   // params.append("note", this.closeOrder.content);
-    //  const idsData = this.closeOrder.orderIds.toString()
-    //  let params = {
-    //     ids: this.Base64.encode(idsData),
-    //     note:  this.Base64.encode(this.closeOrder.content)
-    //  }
-    //   closeOrder(params).then((response) => {
-    //     this.closeOrder.orderIds = [];
-    //     this.closeOrder.dialogVisible = false;
-    //     this.getList();
-    //     this.$message({
-    //       message: "修改成功",
-    //       type: "success",
-    //       duration: 1000,
-    //     });
-    //   });
-    // },
     getList() {
       this.listLoading = true;
-      if (this.listQuery.applyStatus === null) {
-        this.listQuery.applyStatus = "";
-      }
       const params = {
-        pageNum: this.Base64.encode(this.listQuery.pageNum + ""),
-        pageSize: this.Base64.encode(this.listQuery.pageSize + ""),
-        orderSn: this.Base64.encode(this.listQuery.orderSn + ""),
-        receiverKeyword: this.Base64.encode(this.listQuery.receiverKeyword),
-        status: this.Base64.encode(this.listQuery.applyStatus + ""),
-
-        // sourceType: this.Base64.encode(this.listQuery.sourceType + ""),
-        createTime: this.Base64.encode(this.listQuery.createTime),
+        pageNum: this.Base64.encode(this.listQuery.pageNum.toString()),
+        pageSize: this.Base64.encode(this.listQuery.pageSize.toString()),
+        code: this.Base64.encode(this.listQuery.code.toString()),
+        applicantName: this.Base64.encode(this.listQuery.applicantName),
+        status: this.Base64.encode(this.listQuery.status.toString()),
+        // createTime: this.Base64.encode(this.listQuery.createTime.toString()),
+        startAt: this.Base64.encode(this.listQuery.startTime),
+        endAt: this.Base64.encode(this.listQuery.endTime),
       };
-      fetchList(params).then((response) => {
+      inventoryList(params).then((response) => {
         let data = JSON.parse(this.Base64.decode(response.data));
         this.listLoading = false;
         this.list = data.list;
         this.total = data.total;
       });
+    },
+    handleDateRangeChange() {
+      if (this.createTime && this.createTime.length === 2) {
+        this.listQuery.startTime = this.createTime[0];
+        this.listQuery.endTime = this.createTime[1];
+      } else {
+        this.listQuery.startTime = "";
+        this.listQuery.endTime = "";
+      }
     },
     submitApplication() {
       this.$router.push({
@@ -326,7 +309,7 @@ export default {
 </script>
 <style scoped>
 .input-width {
-  width: 203px;
+  width: 360px;
 }
 </style>
 
