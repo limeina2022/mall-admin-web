@@ -62,14 +62,14 @@ export function updateOrderNote(params) {
   })
 }
 
+// 获取产品分类名称
 export function productListCategory() {
   return request({
     url:'inventory/listCategory',
     method:'get'
   });
 }
-
-
+// 获取产品属性
 export function productAttributes(id) {
   return request({
     url:'inventory/getAttributesByProductId/'+id,
@@ -77,10 +77,11 @@ export function productAttributes(id) {
   });
 }
 // 保存草稿
-export function productInsert() {
+export function productInsert(data) {
   return request({
     url:'/inventory/insert',
-    method:'post'
+    method:'post',
+    data:data
   });
 }
 // 列表
@@ -89,5 +90,21 @@ export function inventoryList(params) {
     url:'/inventory/list',
     method:'get',
     params:params
+  })
+}
+// 修改申请数据
+export function editApplicationData(params) {
+  return request({
+    url:'/inventory/details',
+    method:'get',
+    params:params
+  })
+}
+// 修改确认按钮
+export function updateApplication(data) {
+  return request({
+    url:'/inventory/update',
+    method:'post',
+    data:data
   })
 }

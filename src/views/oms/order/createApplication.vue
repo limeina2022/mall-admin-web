@@ -55,21 +55,6 @@
               placeholder="请选择产品数量"
             ></el-input>
           </el-form-item>
-
-          <!-- <el-form-item
-            v-for="attribute in productForm.attributes"
-            :key="attribute.key"
-            :label="attribute.label"
-          >
-            <el-select v-model="attribute.valueData"  clearable placeholder="请选择属性值">
-              <el-option
-                v-for="option in attribute.options"
-                :key="option.value"
-                :label="option.label"
-                :value="option.value"
-              ></el-option>
-            </el-select>
-          </el-form-item> -->
           <el-form-item
             ref="attributeSelects"
             v-for="(attribute, index) in productForm.attributes"
@@ -99,17 +84,22 @@
       v-if="productForms.length > 0"
       style="display: flex; justify-content: center"
     >
-      <el-button type="primary" @click="saveDraft()" size="small">
+      <el-button type="primary" @click="submit(0)" size="small">
         保存草稿
       </el-button>
-      <el-button type="primary" @click="submit()" size="small">
+      <el-button type="primary" @click="submit(1)" size="small">
         提交申请
       </el-button>
     </div>
   </div>
 </template>
 <script>
-import { productListCategory, productAttributes } from "@/api/order";
+import {
+  productListCategory,
+  productAttributes,
+  productInsert,
+  editApplicationData,
+} from "@/api/order";
 // import { fetchList } from "@/api/productCate";
 
 const defaultListQuery = {
@@ -148,38 +138,10 @@ export default {
   },
   created() {
     this.getProductListCategory();
+    // 编辑申请
     if (this.$route.query.id) {
       this.showAttribute = true;
-      this.productForms = [
-        {
-          type: 1,
-          name: "ww",
-          num: 10,
-          attributes: [
-            {
-              key: "颜色",
-              label: "颜色",
-              valueData: "黑色",
-              options: [
-                {
-                  label: "黑色",
-                  value: "黑色",
-                },
-                {
-                  label: "蓝色",
-                  value: "蓝色",
-                },
-              ],
-            },
-          ],
-        },
-        {
-          type: "3",
-          name: "qq",
-          num: 10,
-          attributes: "2",
-        },
-      ];
+      this.editApplicationDataDetail();
     }
   },
   methods: {
@@ -191,11 +153,6 @@ export default {
     },
     addProdctForm() {
       this.productForms.push({ type: "", name: "", num: "", attributes: "" });
-      // this.rules.push({
-      //   type: [{ required: true, message: "请输入申请分类", trigger: "blur" }],
-      //   name: [{ required: true, message: "请输入产品名称", trigger: "blur" }],
-      //   num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
-      // });
     },
 
     removeProdctForm(index) {
@@ -237,8 +194,7 @@ export default {
         });
       });
     },
-    saveDraft() {
-      console.log("this.productForms的值", this.productForms);
+    submit(statusVal) {
       let isValid = true;
       for (let i = 0; i < this.productForms.length; i++) {
         this.$refs.productFormRef[i].validate((valid) => {
@@ -248,13 +204,54 @@ export default {
         });
       }
       if (isValid) {
-        console.log("校验通过");
+        const data = this.convertParamsData(this.productForms, statusVal);
+        const paramsData = JSON.stringify(data);
+        productInsert(this.Base64.encode(paramsData)).then((response) => {
+          this.$message.success(response.message);
+          this.$router.push('/oms/order')
+        });
       } else {
         console.log("校验不通过");
       }
     },
-    submit() {},
-
+    editApplicationDataDetail() {
+      const params = {
+        id: this.Base64.encode(this.$route.query.id.toString()),
+      };
+      editApplicationData(params).then((response) => {
+        console.log("调通了咩", this.Base64.decode(response.data));
+      });
+      // this.productForms = [
+      //   {
+      //     type: 1,
+      //     name: "ww",
+      //     num: 10,
+      //     attributes: [
+      //       {
+      //         key: "颜色",
+      //         label: "颜色",
+      //         valueData: "黑色",
+      //         options: [
+      //           {
+      //             label: "黑色",
+      //             value: "黑色",
+      //           },
+      //           {
+      //             label: "蓝色",
+      //             value: "蓝色",
+      //           },
+      //         ],
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     type: "3",
+      //     name: "qq",
+      //     num: 10,
+      //     attributes: "2",
+      //   },
+      // ];
+    },
     convertToSelectOptioData(input) {
       // 接受的数据格式
       // const input = {
@@ -285,6 +282,22 @@ export default {
         output.push(item);
       }
       return output;
+    },
+    convertParamsData(formVal, statusVal) {
+      //  spData: JSON.stringify(attributes),
+      return formVal.map((item) => {
+        const attributes = item.attributes.map((attr) => ({
+          key: attr.key,
+          value: attr.valueData,
+        }));
+
+        return {
+          productId: item.type,
+          stock: item.num,
+          spData: JSON.stringify(attributes),
+          status: statusVal,
+        };
+      });
     },
   },
 };
