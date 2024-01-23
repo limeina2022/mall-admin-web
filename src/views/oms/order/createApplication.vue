@@ -29,7 +29,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品名称：">
+          <el-form-item label="产品名称：" prop="name">
             <el-select
               v-model="productForm.name"
               class="input-width"
@@ -130,9 +130,10 @@ export default {
       parentId: 0,
       // rules:[]
       rules(index) {
-        return {
-          num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
-        };
+        // return {
+        //   num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
+        //   name: [{ required: true, message: "请输入产品名称", trigger: "blur" }],
+        // };
       },
     };
   },
@@ -148,6 +149,7 @@ export default {
     getRules(index) {
       return {
         num: [{ required: true, message: "请输入数量", trigger: "blur" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
         // 其他字段校验规则
       };
     },
@@ -165,7 +167,9 @@ export default {
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
         const data = this.Base64.decode(response.data);
         const input = JSON.parse(data);
+         console.log('属性值数据结构', input)
         productForm.attributes = this.convertToSelectOptioData(input);
+        console.log('productForm.attributes',productForm.attributes)
         if (productForm.attributes.length > 0) {
           this.showAttribute = true;
         }
