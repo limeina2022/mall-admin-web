@@ -273,7 +273,9 @@ export default {
     },
     getList() {
       this.listLoading = true;
+      // type ： 0入库， 1出库，2退库
       const params = {
+        type: this.Base64.encode('0'),
         pageNum: this.Base64.encode(this.listQuery.pageNum.toString()),
         pageSize: this.Base64.encode(this.listQuery.pageSize.toString()),
         code: this.Base64.encode(this.listQuery.code.toString()),

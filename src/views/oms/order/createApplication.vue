@@ -225,36 +225,36 @@ export default {
       editApplicationData(params).then((response) => {
         console.log("调通了咩", this.Base64.decode(response.data));
       });
-      // this.productForms = [
-      //   {
-      //     type: 1,
-      //     name: "ww",
-      //     num: 10,
-      //     attributes: [
-      //       {
-      //         key: "颜色",
-      //         label: "颜色",
-      //         valueData: "黑色",
-      //         options: [
-      //           {
-      //             label: "黑色",
-      //             value: "黑色",
-      //           },
-      //           {
-      //             label: "蓝色",
-      //             value: "蓝色",
-      //           },
-      //         ],
-      //       },
-      //     ],
-      //   },
-      //   {
-      //     type: "3",
-      //     name: "qq",
-      //     num: 10,
-      //     attributes: "2",
-      //   },
-      // ];
+      this.productForms = [
+        // {
+        //   type: 1,
+        //   name: "ww",
+        //   num: 10,
+        //   attributes: [
+        //     {
+        //       key: "颜色",
+        //       label: "颜色",
+        //       valueData: "黑色",
+        //       options: [
+        //         {
+        //           label: "黑色",
+        //           value: "黑色",
+        //         },
+        //         {
+        //           label: "蓝色",
+        //           value: "蓝色",
+        //         },
+        //       ],
+        //     },
+        //   ],
+        // },
+        // {
+        //   type: "3",
+        //   name: "qq",
+        //   num: 10,
+        //   attributes: "2",
+        // },
+      ];
     },
     convertToSelectOptioData(input) {
       // 接受的数据格式
@@ -300,6 +300,7 @@ export default {
           stock: item.num,
           spData: JSON.stringify(attributes),
           status: statusVal,
+          type: 0
         };
       });
     },
