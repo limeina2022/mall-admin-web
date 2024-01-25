@@ -108,3 +108,11 @@ export function updateApplication(data) {
     data:data
   })
 }
+// 详情
+export function applicationDetail(params) {
+  return request({
+    url:'/inventory/info',
+    method:'get',
+    params:params
+  })
+}

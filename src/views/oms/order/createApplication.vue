@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div class="wrapper" v-if="showPage">
     <div v-for="(productForm, index) in productForms" :key="index">
       <el-card class="filter-container" shadow="never">
         <div style="display: flex; justify-content: space-between">
@@ -99,6 +99,7 @@ import {
   productAttributes,
   productInsert,
   editApplicationData,
+  updateApplication,
 } from "@/api/order";
 // import { fetchList } from "@/api/productCate";
 
@@ -128,6 +129,7 @@ export default {
       prodctTypeList: [],
       prodctNameList: [],
       parentId: 0,
+      showPage: false,
       // rules:[]
       rules(index) {
         // return {
@@ -143,6 +145,8 @@ export default {
     if (this.$route.query.id) {
       this.showAttribute = true;
       this.editApplicationDataDetail();
+    } else {
+      this.showPage = true;
     }
   },
   methods: {
@@ -167,9 +171,7 @@ export default {
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
         const data = this.Base64.decode(response.data);
         const input = JSON.parse(data);
-         console.log('属性值数据结构', input)
         productForm.attributes = this.convertToSelectOptioData(input);
-        console.log('productForm.attributes',productForm.attributes)
         if (productForm.attributes.length > 0) {
           this.showAttribute = true;
         }
@@ -207,15 +209,29 @@ export default {
           }
         });
       }
+
       if (isValid) {
         const data = this.convertParamsData(this.productForms, statusVal);
         const paramsData = JSON.stringify(data);
-        productInsert(this.Base64.encode(paramsData)).then((response) => {
+        updateApplication(this.Base64.encode(paramsData)).then((response) => {
           this.$message.success(response.message);
-          this.$router.push('/oms/order')
+          this.$router.push("/oms/order");
         });
+        if (this.$route.query.id) {
+          // 修改申请接口
+          updateApplication(this.Base64.encode(paramsData)).then((response) => {
+            this.$message.success(response.message);
+            this.$router.push("/oms/order");
+          });
+        } else {
+          // 新建接口
+          productInsert(this.Base64.encode(paramsData)).then((response) => {
+            this.$message.success(response.message);
+            this.$router.push("/oms/order");
+          });
+        }
       } else {
-        console.log("校验不通过");
+        this.$message.warning("请填写必选项");
       }
     },
     editApplicationDataDetail() {
@@ -223,38 +239,49 @@ export default {
         id: this.Base64.encode(this.$route.query.id.toString()),
       };
       editApplicationData(params).then((response) => {
-        console.log("调通了咩", this.Base64.decode(response.data));
-      });
-      this.productForms = [
-        // {
-        //   type: 1,
-        //   name: "ww",
-        //   num: 10,
-        //   attributes: [
-        //     {
-        //       key: "颜色",
-        //       label: "颜色",
-        //       valueData: "黑色",
-        //       options: [
-        //         {
-        //           label: "黑色",
-        //           value: "黑色",
-        //         },
-        //         {
-        //           label: "蓝色",
-        //           value: "蓝色",
-        //         },
-        //       ],
+        const data = this.Base64.decode(response.data);
+        this.productForms = this.echoApplicaitonData(JSON.parse(data));
+        this.showPage = true;
+        // const data1 = [
+        //   {
+        //     productId: 28,
+        //     productName:
+        //       "小米 红米5A 全网通版 3GB+32GB 香槟金 移动联通电信4G手机 双卡双待",
+        //     productCategoryId: 19,
+        //     productCategoryName: "手机通讯",
+        //     stock: 12,
+        //     spData2Json: {
+        //       颜色: "金色,红色",
+        //       容量: "64G",
+        //       尺寸: "39",
+        //       风格: "夏季,秋季",
         //     },
-        //   ],
-        // },
-        // {
-        //   type: "3",
-        //   name: "qq",
-        //   num: 10,
-        //   attributes: "2",
-        // },
-      ];
+        //     spData2JsonArray: [
+        //       { key: "颜色", value: "金色" },
+        //       { key: "容量", value: "64g" },
+        //     ],
+        //   },
+        //   {
+        //     productId: 22,
+        //     productName:
+        //       "大米 红米5A 全网通版 3GB+32GB 香槟金 移动联通电信4G手机 双卡双待",
+        //     productCategoryId: 19,
+        //     productCategoryName: "手机通讯",
+        //     spData2Json: {
+        //       颜色: "金色,红色",
+        //       容量: "64g,16g",
+        //       尺寸: "39,38",
+        //       风格: "夏季,秋季",
+        //     },
+        //     spData2JsonArray: [
+        //       { key: "颜色", value: "金色" },
+        //       { key: "容量", value: "64g" },
+        //     ],
+        //   },
+        // ];
+        // this.productForms = this.echoApplicaitonData(data1);
+        // console.log('mock数据this.productForms',this.productForms)
+      });
     },
     convertToSelectOptioData(input) {
       // 接受的数据格式
@@ -269,7 +296,7 @@ export default {
       // 循环处理每一项
       for (const key in input) {
         const item = {
-          key: key.toLowerCase(),
+          key: key,
           label: key,
           options: [],
         };
@@ -278,7 +305,7 @@ export default {
         const options = input[key].split(",");
         for (let i = 0; i < options.length; i++) {
           item.options.push({
-            value: options[i].toLowerCase(),
+            value: options[i],
             label: options[i],
           });
         }
@@ -287,6 +314,7 @@ export default {
       }
       return output;
     },
+    // 提交申请数据处理
     convertParamsData(formVal, statusVal) {
       //  spData: JSON.stringify(attributes),
       return formVal.map((item) => {
@@ -300,7 +328,34 @@ export default {
           stock: item.num,
           spData: JSON.stringify(attributes),
           status: statusVal,
-          type: 0
+          type: 0,
+        };
+      });
+    },
+    // 修改按钮回显数据处理
+    echoApplicaitonData(data) {
+      return data.map((item) => {
+        const attributes = [];
+        for (const key in item.spData2Json) {
+          const options = item.spData2Json[key]
+            .split(",")
+            .map((value) => ({ label: value, value }));
+
+          const entity = item.spData2JsonArray.find((attr) => attr.key === key);
+          const selectedValue = entity ? entity.value : "";
+
+          attributes.push({
+            key,
+            label: key,
+            valueData: selectedValue,
+            options,
+          });
+        }
+        return {
+          type: item.productCategoryName,
+          name: item.productName,
+          num: item.stock,
+          attributes,
         };
       });
     },
