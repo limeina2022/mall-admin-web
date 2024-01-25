@@ -212,19 +212,20 @@ export default {
 
       if (isValid) {
         const data = this.convertParamsData(this.productForms, statusVal);
-        const paramsData = JSON.stringify(data);
-        updateApplication(this.Base64.encode(paramsData)).then((response) => {
-          this.$message.success(response.message);
-          this.$router.push("/oms/order");
-        });
         if (this.$route.query.id) {
           // 修改申请接口
+          const params = {
+            id: this.$route.query.id,
+            list: data,
+          };
+          const paramsData = JSON.stringify(params);
           updateApplication(this.Base64.encode(paramsData)).then((response) => {
             this.$message.success(response.message);
             this.$router.push("/oms/order");
           });
         } else {
           // 新建接口
+          const paramsData = JSON.stringify(data);
           productInsert(this.Base64.encode(paramsData)).then((response) => {
             this.$message.success(response.message);
             this.$router.push("/oms/order");
@@ -316,7 +317,6 @@ export default {
     },
     // 提交申请数据处理
     convertParamsData(formVal, statusVal) {
-      //  spData: JSON.stringify(attributes),
       return formVal.map((item) => {
         const attributes = item.attributes.map((attr) => ({
           key: attr.key,
