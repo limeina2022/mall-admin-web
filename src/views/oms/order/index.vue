@@ -80,6 +80,7 @@
       <span>数据列表</span>
       <!-- 需要判断，是否是管理员，管理员则不需要展示该按钮 -->
       <el-button
+       v-if=" role !== '超级管理员'"
         style="float: right"
         type="primary"
         @click="submitApplication()"
@@ -103,7 +104,8 @@
           align="center"
         ></el-table-column>
         <el-table-column label="编号" width="80" align="center">
-          <template slot-scope="scope">{{ scope.row.id }}</template>
+          <!-- {{ scope.row.id }} -->
+          <template slot-scope="scope">{{scope.$index + 1}}</template>
         </el-table-column>
         <el-table-column label="申请编号" width="200" align="center">
           <template slot-scope="scope">{{ scope.row.code }}</template>
@@ -136,13 +138,13 @@
             >
             <!--  审批按钮：管理员且待审批状态才会展示 -->
             <el-button
-              v-if="role == '超级管理员' && scope.row.applyStatus === 1"
+              v-if="role == '超级管理员' && scope.row.status === 1"
               size="mini"
               @click="approvalApplication(scope.$index, scope.row)"
               >审批申请</el-button
             >
             <el-button
-              v-else
+              v-if="role !== '超级管理员'"
               size="mini"
               @click="editApplication(scope.$index, scope.row)"
               >修改申请</el-button
