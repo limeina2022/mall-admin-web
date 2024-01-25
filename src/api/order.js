@@ -63,16 +63,20 @@ export function updateOrderNote(params) {
 }
 
 // 获取产品分类名称
-export function productListCategory() {
+export function productListCategory(id) {
+  let url = 'inventory/listCategory';
+  if (id !== undefined && id !== null) {
+    url = `/inventory/listCategory?categoryId=` + id;
+  }
   return request({
-    url:'inventory/listCategory',
-    method:'get'
+    url: url,
+    method: 'get'
   });
 }
 // 获取产品属性
 export function productAttributes(id) {
   return request({
-    url:'inventory/getAttributesByProductId/'+id,
+    url:'inventory/getAttributesByProductId/' + id,
     method:'get'
   });
 }

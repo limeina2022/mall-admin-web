@@ -83,7 +83,7 @@
        v-if=" role !== '超级管理员'"
         style="float: right"
         type="primary"
-        @click="submitApplication()"
+        @click="addApplication()"
         size="small"
       >
         新增申请
@@ -121,10 +121,8 @@
         <el-table-column label="金额" width="120" align="center">
           <template slot-scope="scope">￥{{ scope.row.totalAmount }}</template>
         </el-table-column>
-
         <!-- 新增申请状态：草稿，待审批，通过，驳回 -->
         <el-table-column label="申请状态" width="120" align="center">
-          <!-- <template slot-scope="scope">{{ scope.row.status }}</template> -->
           <template slot-scope="scope">{{
             getStatus(scope.row.status)
           }}</template>
@@ -144,7 +142,7 @@
               >审批申请</el-button
             >
             <el-button
-              v-if="role !== '超级管理员'"
+              v-if="role !== '超级管理员' && scope.row.status !== 2"
               size="mini"
               @click="editApplication(scope.$index, scope.row)"
               >修改申请</el-button
@@ -303,7 +301,7 @@ export default {
         this.listQuery.endTime = "";
       }
     },
-    submitApplication() {
+    addApplication() {
       this.$router.push({
         path: "/oms/createApplication",
       });

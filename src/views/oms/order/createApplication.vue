@@ -19,6 +19,7 @@
               class="input-width"
               placeholder="全部"
               clearable
+              @change="getProductName(productForm)"
             >
               <el-option
                 v-for="item in prodctTypeList"
@@ -168,6 +169,7 @@ export default {
     async getProductAttributes(productForm) {
       // const nameValue = this.productForms[index].name;
       const nameValue = productForm.name;
+      console.log("productForm.name", productForm);
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
         const data = this.Base64.decode(response.data);
         const input = JSON.parse(data);
@@ -177,6 +179,19 @@ export default {
         }
         this.$forceUpdate();
       });
+    },
+    getProductName(productForm) {
+      productListCategory(this.Base64.encode(productForm.type + '')).then(
+        (response) => {
+          const productNameData = this.Base64.decode(response.data);
+          this.prodctNameList = JSON.parse(productNameData).map((obj) => {
+            return {
+              name: obj.productName,
+              id: obj.productId,
+            };
+          });
+        }
+      );
     },
     updateDom() {
       // this.$forceUpdate();
@@ -188,16 +203,15 @@ export default {
         this.prodctTypeList = JSON.parse(productListData).map((obj) => {
           return {
             name: obj.productCategoryName,
-            // id: Math.floor(Math.random() * 100),
-            id: obj.productId,
+            id: obj.productCategoryId,
           };
         });
-        this.prodctNameList = JSON.parse(productListData).map((obj) => {
-          return {
-            name: obj.productName,
-            id: obj.productId,
-          };
-        });
+        //   this.prodctNameList = JSON.parse(productListData).map((obj) => {
+        //     return {
+        //       name: obj.productName,
+        //       id: obj.productId,
+        //     };
+        //   });
       });
     },
     submit(statusVal) {
