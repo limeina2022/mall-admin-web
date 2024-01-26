@@ -118,9 +118,9 @@
         <el-table-column label="申请用户" align="center">
           <template slot-scope="scope">{{ scope.row.applicantName }}</template>
         </el-table-column>
-        <el-table-column label="金额" width="120" align="center">
+        <!-- <el-table-column label="金额" width="120" align="center">
           <template slot-scope="scope">￥{{ scope.row.totalAmount }}</template>
-        </el-table-column>
+        </el-table-column> -->
         <!-- 新增申请状态：草稿，待审批，通过，驳回 -->
         <el-table-column label="申请状态" width="120" align="center">
           <template slot-scope="scope">{{

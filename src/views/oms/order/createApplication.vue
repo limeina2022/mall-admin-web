@@ -355,7 +355,7 @@ export default {
         }));
 
         return {
-          productId: item.productId,
+          productId: item.productId || item.name,
           stock: item.num,
           spData: JSON.stringify(attributes),
           status: statusVal,
