@@ -120,3 +120,21 @@ export function applicationDetail(params) {
     params:params
   })
 }
+
+// 订单详情，通过，驳回
+export function auditApplication(data) {
+  return request({
+    url:'/inventory/audit',
+    method:'post',
+    data:data
+  })
+}
+
+// 备注申请
+export function noteApplication(data) {
+  return request({
+    url:'/inventory/note',
+    method:'post',
+    data:data
+  })
+}

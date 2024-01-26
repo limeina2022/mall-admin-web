@@ -169,7 +169,6 @@ export default {
     async getProductAttributes(productForm) {
       // const nameValue = this.productForms[index].name;
       const nameValue = productForm.name;
-      console.log("productForm.name", productForm);
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
         const data = this.Base64.decode(response.data);
         const input = JSON.parse(data);
@@ -228,9 +227,10 @@ export default {
         const data = this.convertParamsData(this.productForms, statusVal);
         if (this.$route.query.id) {
           // 修改申请接口
+          const data1 = this.convertParamsData1(this.productForms, statusVal)
           const params = {
             id: this.$route.query.id,
-            list: data,
+            list: data1,
           };
           const paramsData = JSON.stringify(params);
           updateApplication(this.Base64.encode(paramsData)).then((response) => {
@@ -338,7 +338,24 @@ export default {
         }));
 
         return {
-          productId: item.type,
+          productId: item.name,
+          stock: item.num,
+          spData: JSON.stringify(attributes),
+          status: statusVal,
+          type: 0,
+        };
+      });
+    },
+      // 提交申请数据处理
+    convertParamsData1(formVal, statusVal) {
+      return formVal.map((item) => {
+        const attributes = item.attributes.map((attr) => ({
+          key: attr.key,
+          value: attr.valueData,
+        }));
+
+        return {
+          productId: item.productId,
           stock: item.num,
           spData: JSON.stringify(attributes),
           status: statusVal,
@@ -347,7 +364,7 @@ export default {
       });
     },
     // 修改按钮回显数据处理
-    echoApplicaitonData(data) {
+    echoApplicaitonData(data) { 
       return data.map((item) => {
         const attributes = [];
         for (const key in item.spData2Json) {
@@ -367,7 +384,9 @@ export default {
         }
         return {
           type: item.productCategoryName,
+          categoryId: item.productCategoryId,
           name: item.productName,
+          productId: item.productId,
           num: item.stock,
           attributes,
         };
