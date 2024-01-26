@@ -213,9 +213,9 @@ export const asyncRouterMap = [
         hidden:true,
         beforeEnter: (to, from, next) => {
           if( to.query.id ) {
-            to.meta.title= '编辑出库申请'
+            to.meta.title= '编辑申请'
           } else {
-            to.meta.title= '新建入库申请'
+            to.meta.title= '新建申请'
           }
           document.title = to.meta.title || '默认标题';
           next()
@@ -243,9 +243,9 @@ export const asyncRouterMap = [
         hidden:true,
         beforeEnter: (to, from, next) => {
           if( to.query.id ) {
-            to.meta.title= '编辑退库申请'
+            to.meta.title= '编辑申请'
           } else {
-            to.meta.title= '新建退库申请'
+            to.meta.title= '新建申请'
           }
           document.title = to.meta.title || '默认标题';
           next()

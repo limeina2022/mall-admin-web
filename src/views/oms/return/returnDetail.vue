@@ -4,11 +4,23 @@
     <el-card shadow="never" style="margin-top: 15px">
       <div class="operate-container">
         <i class="el-icon-warning color-danger" style="margin-left: 20px"></i>
-        <span class="color-danger">当前申请状态：{{ order.status }}</span>
+        <span class="color-danger"
+          >当前申请状态：{{ getStatus(order.summary.status) }}</span
+        >
         <div class="operate-button-container">
           <span v-if="role == '超级管理员'">
-            <el-button size="mini" @click="approval()">通过</el-button>
-            <el-button size="mini" @click="refuse()">驳回</el-button>
+            <el-button
+              v-if="order.summary.status === 0 || order.summary.status === 1"
+              size="mini"
+              @click="confirmStatus(0)"
+              >通过</el-button
+            >
+            <el-button
+              v-if="order.summary.status === 0 || order.summary.status === 1"
+              size="mini"
+              @click="confirmStatus(1)"
+              >驳回</el-button
+            >
           </span>
           <el-button v-else size="mini" @click="editApplication()"
             >修改申请</el-button
@@ -25,18 +37,22 @@
       </div>
       <div class="table-layout">
         <el-row>
-          <el-col :span="4" class="table-cell-title">申请编号</el-col>
+          <el-col :span="5" class="table-cell-title">申请编号</el-col>
           <el-col :span="4" class="table-cell-title">申请时间</el-col>
-          <el-col :span="4" class="table-cell-title">申请用号</el-col>
+          <el-col :span="3" class="table-cell-title">申请用户</el-col>
           <el-col :span="4" class="table-cell-title">申请类型</el-col>
         </el-row>
         <el-row>
-          <el-col :span="4" class="table-cell">{{ order.orderSn }}</el-col>
-          <el-col :span="4" class="table-cell">{{ order.orderTime }}</el-col>
+          <el-col :span="5" class="table-cell">{{ order.summary.code }}</el-col>
           <el-col :span="4" class="table-cell">{{
-            order.memberUsername
+            order.summary.createTime
           }}</el-col>
-          <el-col :span="4" class="table-cell">{{ order.orderType }}</el-col>
+          <el-col :span="3" class="table-cell">{{
+            order.summary.applicantName
+          }}</el-col>
+          <el-col :span="4" class="table-cell">{{
+            getType(order.summary.type)
+          }}</el-col>
         </el-row>
       </div>
       <div style="margin-top: 20px">
@@ -46,17 +62,21 @@
       <div class="table-layout">
         <el-row>
           <el-col :span="6" class="table-cell-title">申请人</el-col>
-          <el-col :span="6" class="table-cell-title">手机号码</el-col>
+          <!-- <el-col :span="6" class="table-cell-title">手机号码</el-col> -->
           <el-col :span="6" class="table-cell-title">申请单位</el-col>
           <el-col :span="6" class="table-cell-title">申请地址</el-col>
         </el-row>
         <el-row>
-          <el-col :span="6" class="table-cell">{{ order.receiverName }}</el-col>
           <el-col :span="6" class="table-cell">{{
-            order.receiverPhone
+            order.summary.applicantName
           }}</el-col>
+          <!-- <el-col :span="6" class="table-cell">{{
+            order.logs.receiverPhone
+          }}</el-col> -->
           <el-col :span="6" class="table-cell">{{ order.workUnit }}</el-col>
-          <el-col :span="6" class="table-cell">{{ workUnitAddress }}</el-col>
+          <el-col :span="6" class="table-cell">{{
+            order.workUnitAddress
+          }}</el-col>
         </el-row>
       </div>
       <div style="margin-top: 20px">
@@ -65,45 +85,44 @@
       </div>
       <el-table
         ref="orderItemTable"
-        :data="order.orderItemList"
+        :data="order.infos"
         style="width: 100%; margin-top: 20px"
         border
       >
         <el-table-column label="商品图片" width="120" align="center">
           <template slot-scope="scope">
-            <img :src="scope.row.productPic" style="height: 80px" />
+            <img :src="scope.row.pic" style="height: 80px" />
           </template>
         </el-table-column>
         <el-table-column label="商品名称" align="center">
           <template slot-scope="scope">
             <p>{{ scope.row.productName }}</p>
-            <p>品牌：{{ scope.row.productBrand }}</p>
           </template>
         </el-table-column>
         <el-table-column label="价格/货号" width="120" align="center">
           <template slot-scope="scope">
-            <p>价格：￥{{ scope.row.productPrice }}</p>
+            <p>价格：￥{{ scope.row.unitPrice }}</p>
             <p>货号：{{ scope.row.productSn }}</p>
           </template>
         </el-table-column>
         <el-table-column label="属性" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.productAttr | formatProductAttr }}
+            {{ getProductAttr(scope.row.spData2JsonArray) }}
           </template>
         </el-table-column>
         <el-table-column label="数量" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.productQuantity }}
+            {{ scope.row.stock }}
           </template>
         </el-table-column>
         <el-table-column label="小计" width="120" align="center">
           <template slot-scope="scope">
-            ￥{{ scope.row.productPrice * scope.row.productQuantity }}
+            ￥{{ scope.row.realTotalPrice }}
           </template>
         </el-table-column>
       </el-table>
       <div style="float: right; margin: 20px">
-        合计：<span class="color-danger">￥{{ order.totalAmount }}</span>
+        合计：<span class="color-danger">￥{{ order.totalPrice }}</span>
       </div>
       <div style="margin-top: 40px">
         <svg-icon icon-class="marker" style="color: #606266"></svg-icon>
@@ -112,12 +131,12 @@
       <el-table
         style="margin-top: 20px; width: 100%"
         ref="orderHistoryTable"
-        :data="order.historyList"
+        :data="order.logs"
         border
       >
         <el-table-column label="操作者" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.operateMan }}
+            {{ scope.row.operatorName }}
           </template>
         </el-table-column>
         <el-table-column label="操作时间" width="160" align="center">
@@ -125,15 +144,14 @@
             {{ formatTime(scope.row.createTime) }}
           </template>
         </el-table-column>
-        <!-- 修改前状态与当前状态需要修改 -->
         <el-table-column label="修改前状态" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.beforeStatus }}
+            {{ getStatus(scope.row.beforeStatus) }}
           </template>
         </el-table-column>
         <el-table-column label="当前状态" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.currentStatus }}
+            {{ getStatus(scope.row.nowStatus) }}
           </template>
         </el-table-column>
         <el-table-column label="备注" align="center">
@@ -159,11 +177,16 @@
         <el-button type="primary" @click="handleMarkOrder">确 定</el-button>
       </span>
     </el-dialog>
-    <logistics-dialog v-model="logisticsDialogVisible"></logistics-dialog>
+    <!-- <logistics-dialog v-model="logisticsDialogVisible"></logistics-dialog> -->
   </div>
 </template>
 <script>
-import { getOrderDetail, updateOrderNote } from "@/api/order";
+import {
+  applicationDetail,
+  updateOrderNote,
+  auditApplication,
+  noteApplication,
+} from "@/api/order";
 import LogisticsDialog from "@/views/oms/order/components/logisticsDialog";
 import { formatDate } from "@/utils/date";
 import VDistpicker from "v-distpicker";
@@ -178,8 +201,9 @@ export default {
       order: {},
       markOrderDialogVisible: false,
       markInfo: { note: "" },
-      logisticsDialogVisible: false,
+      // logisticsDialogVisible: false,
       role: "",
+      // status:''  // 申请状态，0,1,2,3（草稿，待审批，通过，驳回）
     };
   },
   created() {
@@ -187,26 +211,42 @@ export default {
     this.id = this.$route.query.id;
     this.getOrdreListDetail(this.id);
   },
-  filters: {
-    formatProductAttr(value) {
-      if (value == null) {
-        return "";
-      } else {
-        let attr = JSON.parse(value);
-        let result = "";
-        for (let i = 0; i < attr.length; i++) {
-          result += attr[i].key;
-          result += ":";
-          result += attr[i].value;
-          result += ";";
-        }
-        return result;
+  filters: {},
+  methods: {
+    getStatus(status) {
+      switch (status) {
+        case 0:
+          return "草稿";
+        case 1:
+          return "待审批";
+        case 2:
+          return "通过";
+        case 3:
+          return "驳回";
+        case -1:
+          return "无";
+        default:
+          return "";
       }
     },
-  },
-  methods: {
+    getType(type) {
+      switch (type) {
+        case 0:
+          return "入库";
+        case 1:
+          return "出库";
+        case 2:
+          return "退库";
+      }
+    },
+    getProductAttr(value) {
+      return value.map((item) => `${item.key}: ${item.value}`).join(", ");
+    },
     getOrdreListDetail(id) {
-      getOrderDetail(this.Base64.encode(id + "")).then((response) => {
+      const params = {
+        summaryId: this.Base64.encode(id + ""),
+      };
+      applicationDetail(params).then((response) => {
         this.order = JSON.parse(this.Base64.decode(response.data));
       });
     },
@@ -224,7 +264,7 @@ export default {
     },
     remarkApplication() {
       this.markOrderDialogVisible = true;
-      this.markInfo.id = this.id;
+      // this.markInfo.id = this.id;
       this.closeOrder.note = "";
     },
     editApplication() {
@@ -233,29 +273,23 @@ export default {
         query: { id: this.id },
       });
     },
-    approval() {
-      this.$confirm("确定要通过吗?", "提示", {
+    confirmStatus(status) {
+      this.$confirm(`确定要${status === 0 ? "通过" : "驳回"}吗?`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
-        // 调取接口
-        this.$message({
-          type: "success",
-          message: "通过成功!",
-        });
-      });
-    },
-    refuse() {
-      this.$confirm("确定要驳回吗?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        // 调取接口
-        this.$message({
-          type: "success",
-          message: "驳回成功!",
+        const params = {
+          id: this.id,
+          opCode: `${status === 0 ? 0 : 1}`,
+        };
+        const paramsString = JSON.stringify(params);
+        auditApplication(this.Base64.encode(paramsString)).then((response) => {
+          this.$message({
+            type: "success",
+            message: "通过成功!",
+          });
+          this.getOrdreListDetail(this.id);
         });
       });
     },
@@ -265,22 +299,18 @@ export default {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
-        const idData = this.markInfo.id.toString();
-        const statusData = this.order.status.toString();
         let params = {
-          id: this.Base64.encode(idData),
-          note: this.Base64.encode(this.markInfo.note),
-          status: this.Base64.encode(statusData),
+          id: this.id,
+          note: this.markInfo.note,
         };
-        updateOrderNote(params).then((response) => {
+        const paramsString = JSON.stringify(params);
+        console.log("备注的参数", params);
+        noteApplication(this.Base64.encode(paramsString)).then((response) => {
           this.markOrderDialogVisible = false;
           this.$message({
             type: "success",
-            message: "申请备注成功!",
+            message: "备注申请成功!",
           });
-          // getOrderDetail(this.id).then(response => {
-          //   this.order = response.data;
-          // });
           this.getOrdreListDetail(this.id);
         });
       });

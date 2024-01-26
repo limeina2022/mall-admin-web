@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div class="wrapper" v-if="showPage">
     <div v-for="(productForm, index) in productForms" :key="index">
       <el-card class="filter-container" shadow="never">
         <div style="display: flex; justify-content: space-between">
@@ -9,16 +9,17 @@
         <el-form
           :model="productForm"
           ref="productFormRef"
-          :rules="rules"
+          :rules="getRules(index)"
           size="small"
           label-width="220px"
         >
-          <el-form-item label="产品分类：">
+          <el-form-item label="产品分类：" prop="type">
             <el-select
               v-model="productForm.type"
               class="input-width"
               placeholder="全部"
               clearable
+              @change="getProductName(productForm)"
             >
               <el-option
                 v-for="item in prodctTypeList"
@@ -29,13 +30,13 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品名称：">
+          <el-form-item label="产品名称：" prop="name">
             <el-select
               v-model="productForm.name"
               class="input-width"
               placeholder="全部"
               clearable
-              @change="getProductAttributes(index)"
+              @change="getProductAttributes(productForm)"
             >
               <el-option
                 v-for="item in prodctNameList"
@@ -46,7 +47,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品数量：">
+          <el-form-item label="产品数量：" prop="num">
             <el-input
               v-model.number="productForm.num"
               type="number"
@@ -56,11 +57,18 @@
             ></el-input>
           </el-form-item>
           <el-form-item
-            v-for="attribute in productForm.attributes"
+            ref="attributeSelects"
+            v-for="(attribute, index) in productForm.attributes"
             :key="attribute.key"
             :label="attribute.label"
           >
-            <el-select v-model="attribute.value" placeholder="请选择属性值">
+            <el-select
+              v-if="showAttribute"
+              v-model="productForm.attributes[index].valueData"
+              clearable
+              placeholder="请选择属性值"
+              @change="updateDom"
+            >
               <el-option
                 v-for="option in attribute.options"
                 :key="option.value"
@@ -69,38 +77,6 @@
               ></el-option>
             </el-select>
           </el-form-item>
-          <!-- <el-form-item label="产品颜色：">
-            <el-select
-              v-model="productForm.color"
-              class="input-width"
-              placeholder="全部"
-              clearable
-            >
-              <el-option
-                v-for="item in prodctColorList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item> -->
-          <!-- <el-form-item label="产品尺寸：">
-            <el-select
-              v-model="productForm.attribute"
-              class="input-width"
-              placeholder="全部"
-              clearable
-            >
-              <el-option
-                v-for="item in prodctSizeList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item> -->
         </el-form>
       </el-card>
     </div>
@@ -109,109 +85,116 @@
       v-if="productForms.length > 0"
       style="display: flex; justify-content: center"
     >
-      <el-button type="primary" @click="saveDraft()" size="small">
+      <el-button type="primary" @click="submit(0)" size="small">
         保存草稿
       </el-button>
-      <el-button type="primary" @click="submit()" size="small">
+      <el-button type="primary" @click="submit(1)" size="small">
         提交申请
       </el-button>
     </div>
   </div>
 </template>
 <script>
-import { productListCategory, productAttributes } from "@/api/order";
+import {
+  productListCategory,
+  productAttributes,
+  productInsert,
+  editApplicationData,
+  updateApplication,
+} from "@/api/order";
 // import { fetchList } from "@/api/productCate";
 
 const defaultListQuery = {
   type: "",
   name: "",
   num: "",
-  attribute: "",
+  attributes: "",
 };
 export default {
   data() {
     return {
-      productForm: Object.assign({}, defaultListQuery),
-      productForms: [],
+      showAttribute: false,
+      // productForm: Object.assign({}, defaultListQuery),
+      productForms: [
+        {
+          type: "",
+          name: "",
+          num: "",
+          attributes: [
+            {
+              valueData: "",
+            },
+          ],
+        },
+      ],
       prodctTypeList: [],
       prodctNameList: [],
-      // prodctColorList: [],
-      // prodctSizeList: [],
-      attributes: [],
       parentId: 0,
-      rules: {
-        type: [{ required: true, message: "请输入产品分类", trigger: "blur" }],
+      showPage: false,
+      // rules:[]
+      rules(index) {
+        // return {
+        //   num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
+        //   name: [{ required: true, message: "请输入产品名称", trigger: "blur" }],
+        // };
       },
     };
   },
   created() {
     this.getProductListCategory();
+    // 编辑申请
     if (this.$route.query.id) {
-      this.productForms = [
-        {
-          type: 1,
-          name: "ww",
-          num: 10,
-          attribute: "2",
-        },
-        {
-          type: "3",
-          name: "qq",
-          num: 10,
-          attribute: "2",
-        },
-      ];
+      this.showAttribute = true;
+      this.editApplicationDataDetail();
+    } else {
+      this.showPage = true;
     }
   },
-  // watch: {
-  //   productForms: {
-  //     handler: function (newVal) {
-  //       this.getProductListCategory(newVal);
-  //     },
-  //     deep: true,
-  //   },
-  // },
   methods: {
+    getRules(index) {
+      return {
+        type: [{ required: true, message: "请输入类型", trigger: "blur" }],
+        num: [{ required: true, message: "请输入数量", trigger: "blur" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        // 其他字段校验规则
+      };
+    },
     addProdctForm() {
-      this.productForms.push({ type: "", name: "", num: "", attribute: "" });
+      this.productForms.push({ type: "", name: "", num: "", attributes: "" });
     },
 
     removeProdctForm(index) {
       this.productForms.splice(index, 1);
     },
-    // 点击产品分类，获取产品名称
-    // loadProdctName(index) {
-    //   const typeValue = this.productForms[index].type;
-    //   productAttributes(this.Base64.encode(typeValue + "")).then((response) => {
-    //     const responseData = JSON.parse(this.Base64.decode(response.data));
-    //     console.log('responseData--', responseData)
-    //     this.prodctNameList = responseData.map((obj) => {
-    //       return {
-    //         name: obj.productName,
-    //         id: obj.id,
-    //       };
-    //     });
-    //     this.productForms[index].name = "";
-    //   });
-    // },
     //  点击产品名称，获取属性值
-    async getProductAttributes(index) {
-      const nameValue = this.productForms[index].name;
+    async getProductAttributes(productForm) {
+      // const nameValue = this.productForms[index].name;
+      const nameValue = productForm.name;
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
-        const attrData = this.Base64.decode(response.data);
-        console.log("attrData", JSON.parse(attrData)[0].spData);
+        const data = this.Base64.decode(response.data);
+        const input = JSON.parse(data);
+        productForm.attributes = this.convertToSelectOptioData(input);
+        if (productForm.attributes.length > 0) {
+          this.showAttribute = true;
+        }
+        this.$forceUpdate();
       });
-
-      // const data = await response.json();
-      // this.attributes = data.attributes.map((attribute) => ({
-      //   key: attribute.key,
-      //   label: attribute.label,
-      //   options: attribute.options.map((option) => ({
-      //     value: option.value,
-      //     label: option.label,
-      //   })),
-      //   value: "",
-      // }));
+    },
+    getProductName(productForm) {
+      productListCategory(this.Base64.encode(productForm.type + '')).then(
+        (response) => {
+          const productNameData = this.Base64.decode(response.data);
+          this.prodctNameList = JSON.parse(productNameData).map((obj) => {
+            return {
+              name: obj.productName,
+              id: obj.productId,
+            };
+          });
+        }
+      );
+    },
+    updateDom() {
+      // this.$forceUpdate();
     },
 
     getProductListCategory() {
@@ -219,19 +202,19 @@ export default {
         const productListData = this.Base64.decode(response.data);
         this.prodctTypeList = JSON.parse(productListData).map((obj) => {
           return {
-            name:obj.productCategoryName,
-            id: Math.floor(Math.random() * 100),
+            name: obj.productCategoryName,
+            id: obj.productCategoryId,
           };
         });
-         this.prodctNameList = JSON.parse(productListData).map(obj =>{
-          return {
-            name: obj.productName,
-            id: obj.productId,
-          }
-         })
+        //   this.prodctNameList = JSON.parse(productListData).map((obj) => {
+        //     return {
+        //       name: obj.productName,
+        //       id: obj.productId,
+        //     };
+        //   });
       });
     },
-    saveDraft() {
+    submit(statusVal) {
       let isValid = true;
       for (let i = 0; i < this.productForms.length; i++) {
         this.$refs.productFormRef[i].validate((valid) => {
@@ -240,13 +223,176 @@ export default {
           }
         });
       }
+
       if (isValid) {
-        console.log("校验通过");
+        const data = this.convertParamsData(this.productForms, statusVal);
+        if (this.$route.query.id) {
+          // 修改申请接口
+          const data1 = this.convertParamsData1(this.productForms, statusVal)
+          const params = {
+            id: this.$route.query.id,
+            list: data1,
+          };
+          const paramsData = JSON.stringify(params);
+          updateApplication(this.Base64.encode(paramsData)).then((response) => {
+            this.$message.success(response.message);
+            this.$router.push("/oms/returnApplication");
+          });
+        } else {
+          // 新建接口
+          const paramsData = JSON.stringify(data);
+          productInsert(this.Base64.encode(paramsData)).then((response) => {
+            this.$message.success(response.message);
+            this.$router.push("/oms/returnApplication");
+          });
+        }
       } else {
-        console.log("校验不通过");
+        this.$message.warning("请填写必选项");
       }
     },
-    submit() {},
+    editApplicationDataDetail() {
+      const params = {
+        id: this.Base64.encode(this.$route.query.id.toString()),
+      };
+      editApplicationData(params).then((response) => {
+        const data = this.Base64.decode(response.data);
+        this.productForms = this.echoApplicaitonData(JSON.parse(data));
+        this.showPage = true;
+        // const data1 = [
+        //   {
+        //     productId: 28,
+        //     productName:
+        //       "小米 红米5A 全网通版 3GB+32GB 香槟金 移动联通电信4G手机 双卡双待",
+        //     productCategoryId: 19,
+        //     productCategoryName: "手机通讯",
+        //     stock: 12,
+        //     spData2Json: {
+        //       颜色: "金色,红色",
+        //       容量: "64G",
+        //       尺寸: "39",
+        //       风格: "夏季,秋季",
+        //     },
+        //     spData2JsonArray: [
+        //       { key: "颜色", value: "金色" },
+        //       { key: "容量", value: "64g" },
+        //     ],
+        //   },
+        //   {
+        //     productId: 22,
+        //     productName:
+        //       "大米 红米5A 全网通版 3GB+32GB 香槟金 移动联通电信4G手机 双卡双待",
+        //     productCategoryId: 19,
+        //     productCategoryName: "手机通讯",
+        //     spData2Json: {
+        //       颜色: "金色,红色",
+        //       容量: "64g,16g",
+        //       尺寸: "39,38",
+        //       风格: "夏季,秋季",
+        //     },
+        //     spData2JsonArray: [
+        //       { key: "颜色", value: "金色" },
+        //       { key: "容量", value: "64g" },
+        //     ],
+        //   },
+        // ];
+        // this.productForms = this.echoApplicaitonData(data1);
+        // console.log('mock数据this.productForms',this.productForms)
+      });
+    },
+    convertToSelectOptioData(input) {
+      // 接受的数据格式
+      // const input = {
+      //   "颜色": "红色,蓝色",
+      //   "尺寸": "38,39",
+      //   "风格": "秋季,夏季",
+      // };
+
+      const output = [];
+
+      // 循环处理每一项
+      for (const key in input) {
+        const item = {
+          key: key,
+          label: key,
+          options: [],
+        };
+
+        // 处理选项
+        const options = input[key].split(",");
+        for (let i = 0; i < options.length; i++) {
+          item.options.push({
+            value: options[i],
+            label: options[i],
+          });
+        }
+
+        output.push(item);
+      }
+      return output;
+    },
+    // 提交申请数据处理
+    convertParamsData(formVal, statusVal) {
+      return formVal.map((item) => {
+        const attributes = item.attributes.map((attr) => ({
+          key: attr.key,
+          value: attr.valueData,
+        }));
+
+        return {
+          productId: item.name,
+          stock: item.num,
+          spData: JSON.stringify(attributes),
+          status: statusVal,
+          type: 2,
+        };
+      });
+    },
+      // 提交申请数据处理
+    convertParamsData1(formVal, statusVal) {
+      return formVal.map((item) => {
+        const attributes = item.attributes.map((attr) => ({
+          key: attr.key,
+          value: attr.valueData,
+        }));
+
+        return {
+          productId: item.productId || item.name,
+          stock: item.num,
+          spData: JSON.stringify(attributes),
+          status: statusVal,
+          type: 2,
+        };
+      });
+    },
+    // 修改按钮回显数据处理
+    echoApplicaitonData(data) { 
+      return data.map((item) => {
+        const attributes = [];
+        for (const key in item.spData2Json) {
+          const options = item.spData2Json[key]
+            .split(",")
+            .map((value) => ({ label: value, value }));
+
+          const entity = item.spData2JsonArray.find((attr) => attr.key === key);
+          const selectedValue = entity ? entity.value : "";
+
+          attributes.push({
+            key,
+            label: key,
+            valueData: selectedValue,
+            options,
+          });
+        }
+        return {
+          type: item.productCategoryName,
+          categoryId: item.productCategoryId,
+          name: item.productName,
+          productId: item.productId,
+          num: item.stock,
+          attributes,
+        };
+      });
+    },
   },
 };
 </script>
