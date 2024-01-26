@@ -5,20 +5,20 @@
       <div class="operate-container">
         <i class="el-icon-warning color-danger" style="margin-left: 20px"></i>
         <span class="color-danger"
-          >当前申请状态：{{ order.summary.status ? getStatus(order.summary.status) : ''}}</span
+          >当前申请状态：{{ getStatus(order.summary.status) }}</span
         >
         <div class="operate-button-container">
           <span v-if="role == '超级管理员'">
             <el-button
               v-if="order.summary.status !== 2"
               size="mini"
-              @click="approval()"
+              @click="confirmStatus(0)"
               >通过</el-button
             >
             <el-button
               v-if="order.summary.status !== 2"
               size="mini"
-              @click="refuse()"
+              @click="confirmStatus(1)"
               >驳回</el-button
             >
           </span>
@@ -146,12 +146,12 @@
         </el-table-column>
         <el-table-column label="修改前状态" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.beforeStatus? getStatus(scope.row.beforeStatus) : '' }}
+            {{ getStatus(scope.row.beforeStatus) }}
           </template>
         </el-table-column>
         <el-table-column label="当前状态" width="120" align="center">
           <template slot-scope="scope">
-            {{ scope.row.nowStatus? getStatus(scope.row.nowStatus): '' }}
+            {{ getStatus(scope.row.nowStatus) }}
           </template>
         </el-table-column>
         <el-table-column label="备注" align="center">
@@ -225,8 +225,8 @@ export default {
           return "驳回";
         case -1:
           return "无";
-       default:
-         return "";
+        default:
+          return "";
       }
     },
     getType(type) {
@@ -249,74 +249,6 @@ export default {
       applicationDetail(params).then((response) => {
         this.order = JSON.parse(this.Base64.decode(response.data));
       });
-      // this.order = {
-      //   summary: {
-      //     id: 23,
-      //     code: "202401241813528935400",
-      //     status: 0,
-      //     applicantId: 3,
-      //     applicantName: "admin",
-      //     createTime: 1706062433000,
-      //     type: 0,
-      //   },
-      //   logs: [
-      //     {
-      //       id: 8,
-      //       beforeStatus: -1,
-      //       nowStatus: 0,
-      //       operatorId: 3,
-      //       operatorName: "admin",
-      //       type: 0,
-      //     },
-      //   ],
-      //   infos: [
-      //     {
-      //       productName: "华为 HUAWEI P20 ",
-      //       realTotalPrice: 39990,
-      //       unitPrice: 3999,
-      //       pic: "http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/images/20180607/5ac1bf58Ndefaac16.jpg",
-      //       productSn: "6946605",
-      //       productCategoryId: 0,
-      //       productId: 26,
-      //       stock: 10,
-      //       spData:
-      //         '[{"key":"颜色","value":"金色"},{"key":"容量","value":"32G"}]',
-      //       spData2JsonArray: [
-      //         {
-      //           key: "颜色",
-      //           value: "金色",
-      //         },
-      //         {
-      //           key: "容量",
-      //           value: "32G",
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       productName: "华为 HUAWEI P20 ",
-      //       realTotalPrice: 39990,
-      //       unitPrice: 3999,
-      //       pic: "http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/images/20180607/5ac1bf58Ndefaac16.jpg",
-      //       productSn: "6946605",
-      //       productCategoryId: 0,
-      //       productId: 26,
-      //       stock: 10,
-      //       spData:
-      //         '[{"key":"颜色","value":"金色"},{"key":"容量","value":"32G"}]',
-      //       spData2JsonArray: [
-      //         {
-      //           key: "颜色",
-      //           value: "金色",
-      //         },
-      //         {
-      //           key: "容量",
-      //           value: "32G",
-      //         },
-      //       ],
-      //     },
-      //   ],
-      //   totalPrice: 39990,
-      // };
     },
     onSelectRegion(data) {
       this.receiverInfo.receiverProvince = data.province.value;
@@ -341,37 +273,15 @@ export default {
         query: { id: this.id },
       });
     },
-    approval() {
-      this.$confirm("确定要通过吗?", "提示", {
+    confirmStatus(status) {
+      this.$confirm(`确定要${status === 0 ? "通过" : "驳回"}吗?`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
-        // 调取接口， 入参id和stauts
         const params = {
           id: this.id,
-          opCode: 0,
-        };
-        const paramsString = JSON.stringify(params);
-        auditApplication(this.Base64.encode(paramsString)).then((response) => {
-          this.$message({
-            type: "success",
-            message: "通过成功!",
-          });
-          this.getOrdreListDetail(this.id);
-        });
-      });
-    },
-    refuse() {
-      this.$confirm("确定要驳回吗?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      }).then(() => {
-        // 调取接口
-        const params = {
-          id: this.id,
-          opCode: 1,
+          opCode: `${status === 0 ? 0 : 1}`,
         };
         const paramsString = JSON.stringify(params);
         auditApplication(this.Base64.encode(paramsString)).then((response) => {
