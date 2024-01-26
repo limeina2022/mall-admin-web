@@ -10,13 +10,13 @@
         <div class="operate-button-container">
           <span v-if="role == '超级管理员'">
             <el-button
-              v-if="order.summary.status !== 2"
+              v-if="order.summary.status === 0 || order.summary.status === 1"
               size="mini"
               @click="confirmStatus(0)"
               >通过</el-button
             >
             <el-button
-              v-if="order.summary.status !== 2"
+              v-if="order.summary.status === 0 || order.summary.status === 1"
               size="mini"
               @click="confirmStatus(1)"
               >驳回</el-button

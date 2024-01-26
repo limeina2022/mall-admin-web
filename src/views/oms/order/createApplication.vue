@@ -13,7 +13,7 @@
           size="small"
           label-width="220px"
         >
-          <el-form-item label="产品分类：">
+          <el-form-item label="产品分类：" prop="type">
             <el-select
               v-model="productForm.type"
               class="input-width"
@@ -153,6 +153,7 @@ export default {
   methods: {
     getRules(index) {
       return {
+        type: [{ required: true, message: "请输入类型", trigger: "blur" }],
         num: [{ required: true, message: "请输入数量", trigger: "blur" }],
         name: [{ required: true, message: "请输入名称", trigger: "blur" }],
         // 其他字段校验规则
@@ -180,7 +181,7 @@ export default {
       });
     },
     getProductName(productForm) {
-      productListCategory(this.Base64.encode(productForm.type + '')).then(
+      productListCategory(this.Base64.encode(productForm.type + "")).then(
         (response) => {
           const productNameData = this.Base64.decode(response.data);
           this.prodctNameList = JSON.parse(productNameData).map((obj) => {
@@ -216,18 +217,19 @@ export default {
     submit(statusVal) {
       let isValid = true;
       for (let i = 0; i < this.productForms.length; i++) {
-        this.$refs.productFormRef[i].validate((valid) => {
+        this.$refs.productFormRef[i].validate((valid, errors) => {
           if (!valid) {
             isValid = false;
+            console.log(`表单 ${i} 验证失败：`, errors);
           }
         });
       }
-
+      // this.$refs.myForm.validateField(this.productForm.attributes[index].key);
       if (isValid) {
         const data = this.convertParamsData(this.productForms, statusVal);
         if (this.$route.query.id) {
           // 修改申请接口
-          const data1 = this.convertParamsData1(this.productForms, statusVal)
+          const data1 = this.convertParamsData1(this.productForms, statusVal);
           const params = {
             id: this.$route.query.id,
             list: data1,
@@ -346,7 +348,7 @@ export default {
         };
       });
     },
-      // 提交申请数据处理
+    // 提交申请数据处理
     convertParamsData1(formVal, statusVal) {
       return formVal.map((item) => {
         const attributes = item.attributes.map((attr) => ({
@@ -364,7 +366,7 @@ export default {
       });
     },
     // 修改按钮回显数据处理
-    echoApplicaitonData(data) { 
+    echoApplicaitonData(data) {
       return data.map((item) => {
         const attributes = [];
         for (const key in item.spData2Json) {

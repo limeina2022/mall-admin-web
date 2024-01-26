@@ -13,7 +13,7 @@
           size="small"
           label-width="220px"
         >
-          <el-form-item label="产品分类：">
+          <el-form-item label="产品分类：" prop="type">
             <el-select
               v-model="productForm.type"
               class="input-width"
@@ -153,6 +153,7 @@ export default {
   methods: {
     getRules(index) {
       return {
+        type: [{ required: true, message: "请输入类型", trigger: "blur" }],
         num: [{ required: true, message: "请输入数量", trigger: "blur" }],
         name: [{ required: true, message: "请输入名称", trigger: "blur" }],
         // 其他字段校验规则
