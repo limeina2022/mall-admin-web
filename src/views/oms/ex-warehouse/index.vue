@@ -131,6 +131,7 @@
           <template slot-scope="scope">
             <el-button
               size="mini"
+              v-if="role !== '超级管理员'"
               @click="viewApplication(scope.$index, scope.row)"
               >查看申请</el-button
             >
