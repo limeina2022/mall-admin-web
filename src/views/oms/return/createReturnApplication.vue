@@ -14,6 +14,9 @@
           label-width="220px"
         >
           <el-form-item label="产品分类：" prop="type">
+            <span class="text-danger" style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-model="productForm.type"
               class="input-width"
@@ -31,6 +34,9 @@
             </el-select>
           </el-form-item>
           <el-form-item label="产品名称：" prop="name">
+            <span class="text-danger" style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-model="productForm.name"
               class="input-width"
@@ -48,6 +54,9 @@
             </el-select>
           </el-form-item>
           <el-form-item label="产品数量：" prop="num">
+            <span class="text-danger" style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-input
               v-model.number="productForm.num"
               type="number"
@@ -58,10 +67,17 @@
           </el-form-item>
           <el-form-item
             ref="attributeSelects"
-            v-for="(attribute, index) in productForm.attributes"
+            v-for="attribute in productForm.attributes"
             :key="attribute.key"
             :label="attribute.label"
+            :prop="`productForms.${index}.attributes.${i}.valueData`"
           >
+            <span
+              class="text-danger"
+              v-if="showAttribute"
+              style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-if="showAttribute"
               v-model="productForm.attributes[index].valueData"
@@ -85,10 +101,20 @@
       v-if="productForms.length > 0"
       style="display: flex; justify-content: center"
     >
-      <el-button type="primary" @click="submit(0)" size="small">
+      <el-button
+        type="primary"
+        :disabled="!isFormComplete"
+        @click="submit(0)"
+        size="small"
+      >
         保存草稿
       </el-button>
-      <el-button type="primary" @click="submit(1)" size="small">
+      <el-button
+        type="primary"
+        :disabled="!isFormComplete"
+        @click="submit(1)"
+        size="small"
+      >
         提交申请
       </el-button>
     </div>
@@ -131,6 +157,7 @@ export default {
       prodctNameList: [],
       parentId: 0,
       showPage: false,
+      isFormComplete: false,
       // rules:[]
       rules(index) {
         // return {
@@ -150,14 +177,31 @@ export default {
       this.showPage = true;
     }
   },
+  watch: {
+    productForms: {
+      deep: true,
+      handler() {
+        this.checkFormCompletion();
+      },
+    },
+  },
   methods: {
+    checkFormCompletion() {
+      this.isFormComplete = this.productForms.every((product) => {
+        return (
+          product.type &&
+          product.name &&
+          product.num &&
+          product.attributes.every((attribute) => attribute.valueData)
+        );
+      });
+    },
     getRules(index) {
-      return {
-        type: [{ required: true, message: "请输入类型", trigger: "blur" }],
-        num: [{ required: true, message: "请输入数量", trigger: "blur" }],
-        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
-        // 其他字段校验规则
-      };
+      // return {
+      //   type: [{ required: true, message: "请输入类型", trigger: "blur" }],
+      //   num: [{ required: true, message: "请输入数量", trigger: "blur" }],
+      //   name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+      // };
     },
     addProdctForm() {
       this.productForms.push({ type: "", name: "", num: "", attributes: "" });
@@ -181,7 +225,7 @@ export default {
       });
     },
     getProductName(productForm) {
-      productListCategory(this.Base64.encode(productForm.type + '')).then(
+      productListCategory(this.Base64.encode(productForm.type + "")).then(
         (response) => {
           const productNameData = this.Base64.decode(response.data);
           this.prodctNameList = JSON.parse(productNameData).map((obj) => {
@@ -228,7 +272,7 @@ export default {
         const data = this.convertParamsData(this.productForms, statusVal);
         if (this.$route.query.id) {
           // 修改申请接口
-          const data1 = this.convertParamsData1(this.productForms, statusVal)
+          const data1 = this.convertParamsData1(this.productForms, statusVal);
           const params = {
             id: this.$route.query.id,
             list: data1,
@@ -347,7 +391,7 @@ export default {
         };
       });
     },
-      // 提交申请数据处理
+    // 提交申请数据处理
     convertParamsData1(formVal, statusVal) {
       return formVal.map((item) => {
         const attributes = item.attributes.map((attr) => ({
@@ -365,7 +409,7 @@ export default {
       });
     },
     // 修改按钮回显数据处理
-    echoApplicaitonData(data) { 
+    echoApplicaitonData(data) {
       return data.map((item) => {
         const attributes = [];
         for (const key in item.spData2Json) {

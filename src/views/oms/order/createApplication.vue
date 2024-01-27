@@ -13,7 +13,12 @@
           size="small"
           label-width="220px"
         >
-          <el-form-item label="产品分类：" prop="type">
+          <el-form-item label="产品分类">
+            <span
+              class="text-danger"
+              style="color: red; margin:0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-model="productForm.type"
               class="input-width"
@@ -22,7 +27,7 @@
               @change="getProductName(productForm)"
             >
               <el-option
-                v-for="item in prodctTypeList"
+                v-for="item in productTypeList"
                 :key="item.id"
                 :label="item.name"
                 :value="item.id"
@@ -30,7 +35,12 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品名称：" prop="name">
+          <el-form-item label="产品名称">
+            <span
+              class="text-danger"
+              style="color: red; margin:0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-model="productForm.name"
               class="input-width"
@@ -47,7 +57,12 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品数量：" prop="num">
+          <el-form-item label="产品数量">
+            <span
+              class="text-danger"
+              style="color: red; margin:0 10px 0 -9px"
+              >*</span
+            >
             <el-input
               v-model.number="productForm.num"
               type="number"
@@ -56,18 +71,24 @@
               placeholder="请选择产品数量"
             ></el-input>
           </el-form-item>
+
           <el-form-item
             ref="attributeSelects"
             v-for="(attribute, index) in productForm.attributes"
             :key="attribute.key"
             :label="attribute.label"
           >
+            <span
+              v-if="showAttribute"
+              class="text-danger"
+              style="color: red; margin:0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-if="showAttribute"
               v-model="productForm.attributes[index].valueData"
               clearable
               placeholder="请选择属性值"
-              @change="updateDom"
             >
               <el-option
                 v-for="option in attribute.options"
@@ -85,10 +106,15 @@
       v-if="productForms.length > 0"
       style="display: flex; justify-content: center"
     >
-      <el-button type="primary" @click="submit(0)" size="small">
+      <el-button
+        type="primary"
+        :disabled="!isFormComplete"
+        @click="submit(0)"
+        size="small"
+      >
         保存草稿
       </el-button>
-      <el-button type="primary" @click="submit(1)" size="small">
+      <el-button type="primary" :disabled="!isFormComplete" @click="submit(1)" size="small">
         提交申请
       </el-button>
     </div>
@@ -127,17 +153,13 @@ export default {
           ],
         },
       ],
-      prodctTypeList: [],
+      productTypeList: [],
       prodctNameList: [],
       parentId: 0,
       showPage: false,
+      isFormComplete: false,
       // rules:[]
-      rules(index) {
-        // return {
-        //   num: [{ required: true, message: "请输入产品数量", trigger: "blur" }],
-        //   name: [{ required: true, message: "请输入产品名称", trigger: "blur" }],
-        // };
-      },
+      rules(index) {},
     };
   },
   created() {
@@ -150,12 +172,42 @@ export default {
       this.showPage = true;
     }
   },
+  watch: {
+    productForms: {
+      deep: true,
+      handler() {
+        this.checkFormCompletion();
+      },
+    },
+  },
   methods: {
+    checkFormCompletion() {
+      this.isFormComplete = this.productForms.every((product) => {
+        return (
+          product.type &&
+          product.name &&
+          product.num &&
+          product.attributes.every((attribute) => attribute.valueData)
+        );
+      });
+    },
     getRules(index) {
       return {
-        type: [{ required: true, message: "请输入类型", trigger: "blur" }],
-        num: [{ required: true, message: "请输入数量", trigger: "blur" }],
-        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        // type: [{ required: true, message: "请输入类型", trigger: "blur" }],
+        // num: [{ required: true, message: "请输入数量", trigger: "blur" }],
+        // name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        //   [`attributes.${index}.valueData`]: [
+        //   {
+        //     validator: (rule, value, callback) => {
+        //       if (!value) {
+        //         callback(new Error('请选择属性值'));
+        //       } else {
+        //         callback();
+        //       }
+        //     },
+        //     trigger: 'change'
+        //   }
+        // ]
         // 其他字段校验规则
       };
     },
@@ -193,25 +245,16 @@ export default {
         }
       );
     },
-    updateDom() {
-      // this.$forceUpdate();
-    },
-
     getProductListCategory() {
       productListCategory().then((response) => {
         const productListData = this.Base64.decode(response.data);
-        this.prodctTypeList = JSON.parse(productListData).map((obj) => {
+        this.productTypeList = JSON.parse(productListData).map((obj) => {
           return {
             name: obj.productCategoryName,
             id: obj.productCategoryId,
           };
         });
-        //   this.prodctNameList = JSON.parse(productListData).map((obj) => {
-        //     return {
-        //       name: obj.productName,
-        //       id: obj.productId,
-        //     };
-        //   });
+       
       });
     },
     submit(statusVal) {
@@ -225,31 +268,31 @@ export default {
         });
       }
       // this.$refs.myForm.validateField(this.productForm.attributes[index].key);
-      if (isValid) {
-        const data = this.convertParamsData(this.productForms, statusVal);
-        if (this.$route.query.id) {
-          // 修改申请接口
-          const data1 = this.convertParamsData1(this.productForms, statusVal);
-          const params = {
-            id: this.$route.query.id,
-            list: data1,
-          };
-          const paramsData = JSON.stringify(params);
-          updateApplication(this.Base64.encode(paramsData)).then((response) => {
-            this.$message.success(response.message);
-            this.$router.push("/oms/order");
-          });
-        } else {
-          // 新建接口
-          const paramsData = JSON.stringify(data);
-          productInsert(this.Base64.encode(paramsData)).then((response) => {
-            this.$message.success(response.message);
-            this.$router.push("/oms/order");
-          });
-        }
-      } else {
-        this.$message.warning("请填写必选项");
-      }
+      // if (isValid) {
+      //   const data = this.convertParamsData(this.productForms, statusVal);
+      //   if (this.$route.query.id) {
+      //     // 修改申请接口
+      //     const data1 = this.convertParamsData1(this.productForms, statusVal);
+      //     const params = {
+      //       id: this.$route.query.id,
+      //       list: data1,
+      //     };
+      //     const paramsData = JSON.stringify(params);
+      //     updateApplication(this.Base64.encode(paramsData)).then((response) => {
+      //       this.$message.success(response.message);
+      //       this.$router.push("/oms/order");
+      //     });
+      //   } else {
+      //     // 新建接口
+      //     const paramsData = JSON.stringify(data);
+      //     productInsert(this.Base64.encode(paramsData)).then((response) => {
+      //       this.$message.success(response.message);
+      //       this.$router.push("/oms/order");
+      //     });
+      //   }
+      // } else {
+      //   this.$message.warning("请填写必选项");
+      // }
     },
     editApplicationDataDetail() {
       const params = {

@@ -13,7 +13,12 @@
           size="small"
           label-width="220px"
         >
-          <el-form-item label="产品分类：" prop="type">
+          <el-form-item label="产品分类" prop="type">
+             <span
+              class="text-danger"
+              style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-model="productForm.type"
               class="input-width"
@@ -30,7 +35,12 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品名称：" prop="name">
+          <el-form-item label="产品名称" prop="name">
+             <span
+              class="text-danger"
+              style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-model="productForm.name"
               class="input-width"
@@ -47,7 +57,12 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品数量：" prop="num">
+          <el-form-item label="产品数量" prop="num">
+             <span
+              class="text-danger"
+              style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-input
               v-model.number="productForm.num"
               type="number"
@@ -62,6 +77,12 @@
             :key="attribute.key"
             :label="attribute.label"
           >
+           <span
+              class="text-danger"
+              v-if="showAttribute"
+              style="color: red; margin: 0 10px 0 -9px"
+              >*</span
+            >
             <el-select
               v-if="showAttribute"
               v-model="productForm.attributes[index].valueData"
@@ -85,10 +106,10 @@
       v-if="productForms.length > 0"
       style="display: flex; justify-content: center"
     >
-      <el-button type="primary" @click="submit(0)" size="small">
+      <el-button type="primary"  :disabled="!isFormComplete" @click="submit(0)" size="small">
         保存草稿
       </el-button>
-      <el-button type="primary" @click="submit(1)" size="small">
+      <el-button type="primary"  :disabled="!isFormComplete" @click="submit(1)" size="small">
         提交申请
       </el-button>
     </div>
@@ -131,6 +152,7 @@ export default {
       prodctNameList: [],
       parentId: 0,
       showPage: false,
+      isFormComplete: false,
       // rules:[]
       rules(index) {
         // return {
@@ -150,14 +172,32 @@ export default {
       this.showPage = true;
     }
   },
+    watch: {
+    productForms: {
+      deep: true,
+      handler() {
+        this.checkFormCompletion();
+      },
+    },
+  },
   methods: {
+     checkFormCompletion() {
+      this.isFormComplete = this.productForms.every((product) => {
+        return (
+          product.type &&
+          product.name &&
+          product.num &&
+          product.attributes.every((attribute) => attribute.valueData)
+        );
+      });
+    },
     getRules(index) {
-      return {
-        type: [{ required: true, message: "请输入类型", trigger: "blur" }],
-        num: [{ required: true, message: "请输入数量", trigger: "blur" }],
-        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
-        // 其他字段校验规则
-      };
+      // return {
+      //   type: [{ required: true, message: "请输入类型", trigger: "blur" }],
+      //   num: [{ required: true, message: "请输入数量", trigger: "blur" }],
+      //   name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+      //   // 其他字段校验规则
+      // };
     },
     addProdctForm() {
       this.productForms.push({ type: "", name: "", num: "", attributes: "" });
