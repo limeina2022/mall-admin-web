@@ -35,7 +35,7 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品名称" prop="name">
+          <el-form-item label="产品名称" v-if="showProductName">
              <span
               class="text-danger"
               style="color: red; margin: 0 10px 0 -9px"
@@ -57,17 +57,17 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品数量" prop="num">
+          <el-form-item label="产品数量" v-if="showProductName">
              <span
               class="text-danger"
               style="color: red; margin: 0 10px 0 -9px"
               >*</span
             >
             <el-input
-              v-model.number="productForm.num"
-              type="number"
-              min="0"
+              v-model="productForm.num"
               style="width: 190px"
+              :min="1"
+              oninput="value=value.replace(/^0|[^0-9]/g, '')"
               placeholder="请选择产品数量"
             ></el-input>
           </el-form-item>
@@ -153,6 +153,7 @@ export default {
       parentId: 0,
       showPage: false,
       isFormComplete: false,
+      showProductName: false,
       // rules:[]
       rules(index) {
         // return {
@@ -230,6 +231,7 @@ export default {
               id: obj.productId,
             };
           });
+          this.showProductName = true
         }
       );
     },
