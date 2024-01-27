@@ -14,9 +14,7 @@
           label-width="220px"
         >
           <el-form-item label="产品分类" prop="type">
-             <span
-              class="text-danger"
-              style="color: red; margin: 0 10px 0 -9px"
+            <span class="text-danger" style="color: red; margin: 0 10px 0 -9px"
               >*</span
             >
             <el-select
@@ -36,9 +34,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="产品名称" v-if="showProductName">
-             <span
-              class="text-danger"
-              style="color: red; margin: 0 10px 0 -9px"
+            <span class="text-danger" style="color: red; margin: 0 10px 0 -9px"
               >*</span
             >
             <el-select
@@ -58,9 +54,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="产品数量" v-if="showProductName">
-             <span
-              class="text-danger"
-              style="color: red; margin: 0 10px 0 -9px"
+            <span class="text-danger" style="color: red; margin: 0 10px 0 -9px"
               >*</span
             >
             <el-input
@@ -68,7 +62,7 @@
               style="width: 190px"
               :min="1"
               oninput="value=value.replace(/^0|[^0-9]/g, '')"
-              placeholder="请选择产品数量"
+              placeholder="请输入产品数量"
             ></el-input>
           </el-form-item>
           <el-form-item
@@ -77,7 +71,7 @@
             :key="attribute.key"
             :label="attribute.label"
           >
-           <span
+            <span
               class="text-danger"
               v-if="showAttribute"
               style="color: red; margin: 0 10px 0 -9px"
@@ -106,10 +100,20 @@
       v-if="productForms.length > 0"
       style="display: flex; justify-content: center"
     >
-      <el-button type="primary"  :disabled="!isFormComplete" @click="submit(0)" size="small">
+      <el-button
+        type="primary"
+        :disabled="!isFormComplete"
+        @click="submit(0)"
+        size="small"
+      >
         保存草稿
       </el-button>
-      <el-button type="primary"  :disabled="!isFormComplete" @click="submit(1)" size="small">
+      <el-button
+        type="primary"
+        :disabled="!isFormComplete"
+        @click="submit(1)"
+        size="small"
+      >
         提交申请
       </el-button>
     </div>
@@ -173,7 +177,7 @@ export default {
       this.showPage = true;
     }
   },
-    watch: {
+  watch: {
     productForms: {
       deep: true,
       handler() {
@@ -182,7 +186,7 @@ export default {
     },
   },
   methods: {
-     checkFormCompletion() {
+    checkFormCompletion() {
       this.isFormComplete = this.productForms.every((product) => {
         return (
           product.type &&
@@ -209,7 +213,9 @@ export default {
     },
     //  点击产品名称，获取属性值
     async getProductAttributes(productForm) {
-      // const nameValue = this.productForms[index].name;
+      if (productForm.name == "") {
+        return;
+      }
       const nameValue = productForm.name;
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
         const data = this.Base64.decode(response.data);
@@ -222,7 +228,10 @@ export default {
       });
     },
     getProductName(productForm) {
-      productListCategory(this.Base64.encode(productForm.type + '')).then(
+      if (productForm.type == "") {
+        return;
+      }
+      productListCategory(this.Base64.encode(productForm.type + "")).then(
         (response) => {
           const productNameData = this.Base64.decode(response.data);
           this.prodctNameList = JSON.parse(productNameData).map((obj) => {
@@ -231,7 +240,7 @@ export default {
               id: obj.productId,
             };
           });
-          this.showProductName = true
+          this.showProductName = true;
         }
       );
     },
@@ -248,49 +257,43 @@ export default {
             id: obj.productCategoryId,
           };
         });
-        //   this.prodctNameList = JSON.parse(productListData).map((obj) => {
-        //     return {
-        //       name: obj.productName,
-        //       id: obj.productId,
-        //     };
-        //   });
       });
     },
     submit(statusVal) {
-      let isValid = true;
-      for (let i = 0; i < this.productForms.length; i++) {
-        this.$refs.productFormRef[i].validate((valid) => {
-          if (!valid) {
-            isValid = false;
-          }
+      // let isValid = true;
+      // for (let i = 0; i < this.productForms.length; i++) {
+      //   this.$refs.productFormRef[i].validate((valid) => {
+      //     if (!valid) {
+      //       isValid = false;
+      //     }
+      //   });
+      // }
+
+      // if (isValid) {
+      const data = this.convertParamsData(this.productForms, statusVal);
+      if (this.$route.query.id) {
+        // 修改申请接口
+        const data1 = this.convertParamsData1(this.productForms, statusVal);
+        const params = {
+          id: this.$route.query.id,
+          list: data1,
+        };
+        const paramsData = JSON.stringify(params);
+        updateApplication(this.Base64.encode(paramsData)).then((response) => {
+          this.$message.success(response.message);
+          this.$router.push("/oms/exWarehouse");
+        });
+      } else {
+        // 新建接口
+        const paramsData = JSON.stringify(data);
+        productInsert(this.Base64.encode(paramsData)).then((response) => {
+          this.$message.success(response.message);
+          this.$router.push("/oms/exWarehouse");
         });
       }
-
-      if (isValid) {
-        const data = this.convertParamsData(this.productForms, statusVal);
-        if (this.$route.query.id) {
-          // 修改申请接口
-          const data1 = this.convertParamsData1(this.productForms, statusVal)
-          const params = {
-            id: this.$route.query.id,
-            list: data1,
-          };
-          const paramsData = JSON.stringify(params);
-          updateApplication(this.Base64.encode(paramsData)).then((response) => {
-            this.$message.success(response.message);
-            this.$router.push("/oms/exWarehouse");
-          });
-        } else {
-          // 新建接口
-          const paramsData = JSON.stringify(data);
-          productInsert(this.Base64.encode(paramsData)).then((response) => {
-            this.$message.success(response.message);
-            this.$router.push("/oms/exWarehouse");
-          });
-        }
-      } else {
-        this.$message.warning("请填写必选项");
-      }
+      // } else {
+      //   this.$message.warning("请填写必选项");
+      // }
     },
     editApplicationDataDetail() {
       const params = {
@@ -389,7 +392,7 @@ export default {
         };
       });
     },
-      // 提交申请数据处理
+    // 提交申请数据处理
     convertParamsData1(formVal, statusVal) {
       return formVal.map((item) => {
         const attributes = item.attributes.map((attr) => ({
@@ -407,7 +410,7 @@ export default {
       });
     },
     // 修改按钮回显数据处理
-    echoApplicaitonData(data) { 
+    echoApplicaitonData(data) {
       return data.map((item) => {
         const attributes = [];
         for (const key in item.spData2Json) {

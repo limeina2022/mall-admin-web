@@ -45,7 +45,7 @@
               @change="getProductAttributes(productForm)"
             >
               <el-option
-                v-for="item in prodctNameList"
+                v-for="item in productNameList"
                 :key="item.id"
                 :label="item.name"
                 :value="item.id"
@@ -62,15 +62,14 @@
               type="number"
               min="0"
               style="width: 190px"
-              placeholder="请选择产品数量"
+              placeholder="请输入产品数量"
             ></el-input>
           </el-form-item>
           <el-form-item
             ref="attributeSelects"
-            v-for="attribute in productForm.attributes"
+            v-for="(attribute, index) in productForm.attributes"
             :key="attribute.key"
             :label="attribute.label"
-            :prop="`productForms.${index}.attributes.${i}.valueData`"
           >
             <span
               class="text-danger"
@@ -154,7 +153,7 @@ export default {
         },
       ],
       prodctTypeList: [],
-      prodctNameList: [],
+      productNameList: [],
       parentId: 0,
       showPage: false,
       isFormComplete: false,
@@ -213,7 +212,9 @@ export default {
     },
     //  点击产品名称，获取属性值
     async getProductAttributes(productForm) {
-      // const nameValue = this.productForms[index].name;
+      if (productForm.name == "") {
+        return;
+      }
       const nameValue = productForm.name;
       productAttributes(this.Base64.encode(nameValue + "")).then((response) => {
         const data = this.Base64.decode(response.data);
@@ -226,16 +227,19 @@ export default {
       });
     },
     getProductName(productForm) {
+      if (productForm.type == "") {
+        return;
+      }
       productListCategory(this.Base64.encode(productForm.type + "")).then(
         (response) => {
           const productNameData = this.Base64.decode(response.data);
-          this.prodctNameList = JSON.parse(productNameData).map((obj) => {
+          this.productNameList = JSON.parse(productNameData).map((obj) => {
             return {
               name: obj.productName,
               id: obj.productId,
             };
           });
-          this.showProductName = true
+          this.showProductName = true;
         }
       );
     },
@@ -252,49 +256,44 @@ export default {
             id: obj.productCategoryId,
           };
         });
-        //   this.prodctNameList = JSON.parse(productListData).map((obj) => {
-        //     return {
-        //       name: obj.productName,
-        //       id: obj.productId,
-        //     };
-        //   });
+        this.showPage = true;
       });
     },
     submit(statusVal) {
-      let isValid = true;
-      for (let i = 0; i < this.productForms.length; i++) {
-        this.$refs.productFormRef[i].validate((valid) => {
-          if (!valid) {
-            isValid = false;
-          }
+      // let isValid = true;
+      // for (let i = 0; i < this.productForms.length; i++) {
+      //   this.$refs.productFormRef[i].validate((valid) => {
+      //     if (!valid) {
+      //       isValid = false;
+      //     }
+      //   });
+      // }
+
+      // if (isValid) {
+      const data = this.convertParamsData(this.productForms, statusVal);
+      if (this.$route.query.id) {
+        // 修改申请接口
+        const data1 = this.convertParamsData1(this.productForms, statusVal);
+        const params = {
+          id: this.$route.query.id,
+          list: data1,
+        };
+        const paramsData = JSON.stringify(params);
+        updateApplication(this.Base64.encode(paramsData)).then((response) => {
+          this.$message.success(response.message);
+          this.$router.push("/oms/returnApplication");
+        });
+      } else {
+        // 新建接口
+        const paramsData = JSON.stringify(data);
+        productInsert(this.Base64.encode(paramsData)).then((response) => {
+          this.$message.success(response.message);
+          this.$router.push("/oms/returnApplication");
         });
       }
-
-      if (isValid) {
-        const data = this.convertParamsData(this.productForms, statusVal);
-        if (this.$route.query.id) {
-          // 修改申请接口
-          const data1 = this.convertParamsData1(this.productForms, statusVal);
-          const params = {
-            id: this.$route.query.id,
-            list: data1,
-          };
-          const paramsData = JSON.stringify(params);
-          updateApplication(this.Base64.encode(paramsData)).then((response) => {
-            this.$message.success(response.message);
-            this.$router.push("/oms/returnApplication");
-          });
-        } else {
-          // 新建接口
-          const paramsData = JSON.stringify(data);
-          productInsert(this.Base64.encode(paramsData)).then((response) => {
-            this.$message.success(response.message);
-            this.$router.push("/oms/returnApplication");
-          });
-        }
-      } else {
-        this.$message.warning("请填写必选项");
-      }
+      // } else {
+      //   this.$message.warning("请填写必选项");
+      // }
     },
     editApplicationDataDetail() {
       const params = {
