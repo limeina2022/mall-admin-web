@@ -22,9 +22,14 @@
               >驳回</el-button
             >
           </span>
-          <el-button v-else size="mini" @click="editApplication()"
-            >修改申请</el-button
-          >
+          <span v-else>
+            <el-button
+              v-if="order.summary.status === 0"
+              size="mini"
+              @click="editApplication()"
+              >修改申请</el-button
+            >
+          </span>
 
           <el-button size="mini" @click="remarkApplication()"
             >备注申请</el-button

@@ -258,7 +258,7 @@ export default {
     },
     approvalApplication(index, row) {
       this.$router.push({
-        path: "/oms/createReturnApplication",
+        path: "/oms/returnDetail",
         query: { id: row.id },
       });
     },

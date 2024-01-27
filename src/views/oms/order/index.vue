@@ -142,7 +142,7 @@
               >审批申请</el-button
             >
             <el-button
-              v-if="role !== '超级管理员' && scope.row.status !== 2"
+              v-if="role !== '超级管理员' && scope.row.status === 0"
               size="mini"
               @click="editApplication(scope.$index, scope.row)"
               >修改申请</el-button
