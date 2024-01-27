@@ -33,7 +33,7 @@
         <el-col :span="6">
           <div class="total-frame">
             <img :src="img_home_order" class="total-icon">
-            <div class="total-title">今日订单总数</div>
+            <div class="total-title">今日库存总数</div>
             <div class="total-value">200</div>
           </div>
         </el-col>
@@ -74,19 +74,19 @@
         <el-row :gutter="20">
           <el-col :span="8">
             <div class="un-handle-item">
-              <span class="font-medium">待付款订单</span>
+              <span class="font-medium">待付款库存</span>
               <span style="float: right" class="color-danger">(10)</span>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="un-handle-item">
-              <span class="font-medium">已完成订单</span>
+              <span class="font-medium">已完成库存</span>
               <span style="float: right" class="color-danger">(10)</span>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="un-handle-item">
-              <span class="font-medium">待确认收货订单</span>
+              <span class="font-medium">待确认收货库存</span>
               <span style="float: right" class="color-danger">(10)</span>
             </div>
           </el-col>
@@ -94,7 +94,7 @@
         <el-row :gutter="20">
           <el-col :span="8">
             <div class="un-handle-item">
-              <span class="font-medium">待发货订单</span>
+              <span class="font-medium">待发货库存</span>
               <span style="float: right" class="color-danger">(10)</span>
             </div>
           </el-col>
@@ -114,13 +114,13 @@
         <el-row :gutter="20">
           <el-col :span="8">
             <div class="un-handle-item">
-              <span class="font-medium">已发货订单</span>
+              <span class="font-medium">已发货库存</span>
               <span style="float: right" class="color-danger">(10)</span>
             </div>
           </el-col>
           <el-col :span="8">
             <div class="un-handle-item">
-              <span class="font-medium">待处理退货订单</span>
+              <span class="font-medium">待处理退货库存</span>
               <span style="float: right" class="color-danger">(10)</span>
             </div>
           </el-col>
@@ -176,12 +176,12 @@
       </el-row>
     </div>
     <div class="statistics-layout">
-      <div class="layout-title">订单统计</div>
+      <div class="layout-title">库存统计</div>
       <el-row>
         <el-col :span="4">
           <div style="padding: 20px">
             <div>
-              <div style="color: #909399;font-size: 14px">本月订单总数</div>
+              <div style="color: #909399;font-size: 14px">本月库存总数</div>
               <div style="color: #606266;font-size: 24px;padding: 10px 0">10000</div>
               <div>
                 <span class="color-success" style="font-size: 14px">+10%</span>
@@ -189,7 +189,7 @@
               </div>
             </div>
             <div style="margin-top: 20px;">
-              <div style="color: #909399;font-size: 14px">本周订单总数</div>
+              <div style="color: #909399;font-size: 14px">本周库存总数</div>
               <div style="color: #606266;font-size: 24px;padding: 10px 0">1000</div>
               <div>
                 <span class="color-danger" style="font-size: 14px">-10%</span>
